@@ -17,7 +17,7 @@ export interface TrainingSession {
   date: string; // YYYY-MM-DD
   time: string; // HH:MM
   location: string;
-  notes?: string;
+  notes?: string | undefined;
   createdAt: string;
 }
 
@@ -26,7 +26,7 @@ export interface AttendanceRecord {
   sessionId: string;
   playerId: string;
   status: AttendanceStatus;
-  notes?: string;
+  notes?: string | undefined;
   createdAt: string;
 }
 
