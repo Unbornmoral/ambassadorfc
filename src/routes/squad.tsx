@@ -95,7 +95,7 @@ function SquadPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Player | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<"fullName" | "jerseyNumber" | "position" | "phoneNumber", string>>>({});
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
 
   const players = useMemo(() => {
@@ -133,7 +133,7 @@ function SquadPage() {
   }
 
   function submit() {
-    const next: Record<string, string> = {};
+    const next: Partial<Record<"fullName" | "jerseyNumber" | "position" | "phoneNumber", string>> = {};
     if (form.fullName.trim().length < 3) next.fullName = "Enter the player's full name.";
     const jersey = Number(form.jerseyNumber);
     if (!form.jerseyNumber || Number.isNaN(jersey) || jersey < 1 || jersey > 99)
