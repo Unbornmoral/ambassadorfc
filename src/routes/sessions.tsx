@@ -129,13 +129,13 @@ function SessionsPage() {
     location: data.settings.defaultLocation,
     notes: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<"title" | "date" | "time" | "location", string>>>({});
 
   const upcoming = upcomingSessions(data);
   const past = pastSessions(data);
 
   function submit() {
-    const next: Record<string, string> = {};
+    const next: Partial<Record<"title" | "date" | "time" | "location", string>> = {};
     if (form.title.trim().length < 3) next.title = "Give the session a title.";
     if (!form.date) next.date = "Pick a date.";
     if (!form.time) next.time = "Pick a time.";

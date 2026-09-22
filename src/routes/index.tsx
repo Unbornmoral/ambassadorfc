@@ -50,7 +50,7 @@ function Metric({
 }: {
   label: string;
   value: string;
-  hint?: string;
+  hint?: string | undefined;
   icon: typeof Users;
 }) {
   return (
