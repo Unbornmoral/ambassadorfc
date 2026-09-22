@@ -53,7 +53,7 @@ export const Route = createFileRoute("/sessions")({
       },
     ],
   }),
-  component: SessionsPage;
+  component: SessionsPage,
 });
 
 function SessionCard({
