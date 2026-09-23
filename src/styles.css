@@ -153,4 +153,17 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url("/__l5e/assets-v1/979e955e-54bb-461e-9e89-5a2d12bb278c/ambassador_logo.jpeg");
+    background-repeat: no-repeat;
+    background-position: center 30%;
+    background-size: min(70vw, 560px);
+    opacity: 0.06;
+    pointer-events: none;
+  }
 }

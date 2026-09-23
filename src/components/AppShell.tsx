@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu, Shield } from "lucide-react";
+import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import logoAsset from "@/assets/ambassador_logo.jpeg.asset.json";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -18,15 +19,14 @@ const NAV = [
 
 export function TeamBadge({ className }: { className?: string }) {
   return (
-    <div
+    <img
+      src={logoAsset.url}
+      alt="Ambassador FC badge"
       className={cn(
-        "flex size-10 shrink-0 items-center justify-center rounded-lg border border-sidebar-border text-primary-foreground",
+        "size-10 shrink-0 rounded-lg border border-sidebar-border object-cover",
         className,
       )}
-      style={{ background: "var(--gradient-pitch)" }}
-    >
-      <Shield className="size-5" />
-    </div>
+    />
   );
 }
 
@@ -66,7 +66,7 @@ export function AppShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
         <div className="flex items-center gap-3 px-1 pb-6">
           <TeamBadge />
