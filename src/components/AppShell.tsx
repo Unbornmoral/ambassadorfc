@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/ambassador_logo.jpeg.asset.json";
-...
+
+const NAV = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/squad", label: "Squad", icon: Users },
+  { to: "/sessions", label: "Sessions", icon: CalendarDays },
+  { to: "/attendance", label: "Roll Call", icon: ClipboardCheck },
+  { to: "/settings", label: "Settings", icon: Settings },
+] as const;
+
 export function TeamBadge({ className }: { className?: string }) {
   return (
     <img
