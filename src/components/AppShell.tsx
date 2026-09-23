@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu, Shield } from "lucide-react";
+import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -7,26 +7,18 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-
-const NAV = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/squad", label: "Squad", icon: Users },
-  { to: "/sessions", label: "Sessions", icon: CalendarDays },
-  { to: "/attendance", label: "Roll Call", icon: ClipboardCheck },
-  { to: "/settings", label: "Settings", icon: Settings },
-] as const;
-
+import logoAsset from "@/assets/ambassador_logo.jpeg.asset.json";
+...
 export function TeamBadge({ className }: { className?: string }) {
   return (
-    <div
+    <img
+      src={logoAsset.url}
+      alt="Ambassador FC badge"
       className={cn(
-        "flex size-10 shrink-0 items-center justify-center rounded-lg border border-sidebar-border text-primary-foreground",
+        "size-10 shrink-0 rounded-lg border border-sidebar-border object-cover",
         className,
       )}
-      style={{ background: "var(--gradient-pitch)" }}
-    >
-      <Shield className="size-5" />
-    </div>
+    />
   );
 }
 
