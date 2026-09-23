@@ -66,7 +66,7 @@ export function AppShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
         <div className="flex items-center gap-3 px-1 pb-6">
           <TeamBadge />
