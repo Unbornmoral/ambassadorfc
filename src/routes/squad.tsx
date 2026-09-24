@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MessageCircle, Phone, Plus, Search, Trash2, UserPen } from "lucide-react";
+import { LayoutGrid, List, MessageCircle, Phone, Plus, Search, Trash2, UserPen } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { PositionBadge } from "@/components/StatusPill";
+import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,6 +93,7 @@ function SquadPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Position | "All">("All");
   const [sort, setSort] = useState<SortKey>("jersey");
+  const [view, setView] = useState<"sheet" | "list">("sheet");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Player | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
@@ -184,13 +186,27 @@ function SquadPage() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="order-last ml-auto flex overflow-hidden rounded-md border-2 border-foreground">
+            {([["sheet", "Team sheet", LayoutGrid], ["list", "List", List]] as const).map(([v, l, Icon]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 font-condensed text-xs font-bold uppercase tracking-wider",
+                  view === v ? "bg-foreground text-background" : "bg-card text-foreground",
+                )}
+              >
+                <Icon className="size-3.5" /> {l}
+              </button>
+            ))}
+          </div>
           {FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
               className={cn(
-                "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                "rounded-full border px-3.5 py-1.5 font-condensed text-xs font-bold uppercase tracking-wider transition-colors",
                 filter === f.value
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:border-primary/40",
@@ -201,15 +217,81 @@ function SquadPage() {
           ))}
         </div>
 
+        {view === "sheet" ? (
+          <div className="space-y-8">
+            {POSITION_ORDER.map((pos) => {
+              const group = players.filter((p) => p.position === pos);
+              if (!group.length) return null;
+              return (
+                <section key={pos}>
+                  <div className="mb-3 flex items-center gap-3 border-b-2 border-foreground pb-2">
+                    <h2 className="font-display text-2xl text-foreground sm:text-3xl">
+                      {POSITION_PLURAL[pos]}
+                    </h2>
+                    <span className="rounded-sm bg-pitch px-2 py-0.5 font-condensed text-sm font-bold text-pitch-foreground">
+                      {group.length}
+                    </span>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {group.map((p) => (
+                      <div
+                        key={p.id}
+                        className="group relative overflow-hidden rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-lg"
+                      >
+                        <span className="pointer-events-none absolute -right-1 -top-4 font-display text-7xl text-primary/[0.07]">
+                          {p.jerseyNumber}
+                        </span>
+                        <div className="relative flex items-center gap-4">
+                          <SquadNumber number={p.jerseyNumber} name={p.fullName} size="lg" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-condensed text-lg font-bold uppercase leading-tight text-foreground">
+                              {p.fullName}
+                            </p>
+                            <div className="mt-1 flex items-center gap-2">
+                              <PositionBadge position={p.position} />
+                              <span className="font-condensed text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {playerAttendanceRate(data, p.id)}% attendance
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="relative mt-4 flex gap-1 border-t border-border pt-3">
+                          <Button asChild variant="ghost" size="sm" className="flex-1">
+                            <a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call player">
+                              <Phone className="size-4" />
+                            </a>
+                          </Button>
+                          <Button asChild variant="ghost" size="sm" className="flex-1">
+                            <a href={`https://wa.me/${digits(p.phoneNumber)}`} target="_blank" rel="noreferrer" aria-label="WhatsApp player">
+                              <MessageCircle className="size-4" />
+                            </a>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="flex-1" onClick={() => openEdit(p)} aria-label="Edit player">
+                            <UserPen className="size-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDeleteTarget(p)} aria-label="Remove player">
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+            {players.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No players found.</p>
+            ) : null}
+          </div>
+        ) : (
+        <>
         {/* Mobile cards */}
         <div className="space-y-3 lg:hidden">
           {players.map((p) => (
             <Card key={p.id} className="shadow-none">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-                    {p.jerseyNumber}
-                  </div>
+                  <SquadNumber number={p.jerseyNumber} name={p.fullName} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">{p.fullName}</p>
                     <div className="mt-1 flex items-center gap-2">
@@ -280,7 +362,7 @@ function SquadPage() {
               <TableBody>
                 {players.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-bold">{p.jerseyNumber}</TableCell>
+                    <TableCell className="font-display text-xl">{p.jerseyNumber}</TableCell>
                     <TableCell className="font-medium">{p.fullName}</TableCell>
                     <TableCell>
                       <PositionBadge position={p.position} />
@@ -311,6 +393,8 @@ function SquadPage() {
             ) : null}
           </CardContent>
         </Card>
+        </>
+        )}
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
