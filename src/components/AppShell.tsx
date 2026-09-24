@@ -32,21 +32,38 @@ export function TeamBadge({ className }: { className?: string }) {
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-0.5">
       {NAV.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}
           onClick={onNavigate}
           activeOptions={{ exact: to === "/" }}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+          className="group relative flex items-center gap-3 px-4 py-3 font-condensed text-base font-semibold uppercase tracking-wider text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          activeProps={{
+            className:
+              "bg-sidebar-accent !text-sidebar-accent-foreground before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gold",
+          }}
         >
           <Icon className="size-4" />
           {label}
         </Link>
       ))}
     </nav>
+  );
+}
+
+function Wordmark({ name }: { name: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <TeamBadge className="size-12 rounded-full border-2 border-gold/60" />
+      <div className="leading-none">
+        <p className="font-display text-xl text-sidebar-foreground">{name}</p>
+        <p className="mt-1 font-condensed text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
+          Official Club Platform
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -67,23 +84,25 @@ export function AppShell({
 
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
-        <div className="flex items-center gap-3 px-1 pb-6">
-          <TeamBadge />
-          <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">{data.settings.teamName}</p>
-            <p className="text-xs text-sidebar-foreground/60">Team Management</p>
-          </div>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar pitch-stripes lg:flex">
+        <div className="border-b border-sidebar-border px-5 py-6">
+          <Wordmark name={data.settings.teamName} />
         </div>
-        <NavLinks />
-        <div className="mt-auto rounded-md bg-sidebar-accent/60 p-3">
-          <p className="text-xs font-medium text-sidebar-foreground">{data.settings.coachName}</p>
-          <p className="text-xs text-sidebar-foreground/60">Head Coach</p>
+        <div className="py-4">
+          <NavLinks />
+        </div>
+        <div className="mt-auto border-t border-sidebar-border px-5 py-4">
+          <p className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/50">
+            Head Coach
+          </p>
+          <p className="font-condensed text-lg font-bold uppercase text-sidebar-foreground">
+            {data.settings.coachName}
+          </p>
         </div>
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b-4 border-primary bg-card/95 backdrop-blur">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
@@ -91,22 +110,23 @@ export function AppShell({
                   <Menu className="size-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-4">
-                <div className="flex items-center gap-3 px-1 pb-6 pt-2">
-                  <TeamBadge />
-                  <p className="text-sm font-semibold text-sidebar-foreground">
-                    {data.settings.teamName}
-                  </p>
+              <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-0 pitch-stripes">
+                <div className="border-b border-sidebar-border px-5 py-6">
+                  <Wordmark name={data.settings.teamName} />
                 </div>
-                <NavLinks onNavigate={() => setOpen(false)} />
+                <div className="py-4">
+                  <NavLinks onNavigate={() => setOpen(false)} />
+                </div>
               </SheetContent>
             </Sheet>
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
+              <h1 className="truncate font-display text-2xl text-foreground sm:text-3xl">
                 {title}
               </h1>
               {subtitle ? (
-                <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+                <p className="mt-1 truncate font-condensed text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                  {subtitle}
+                </p>
               ) : null}
             </div>
             {action}
@@ -116,7 +136,7 @@ export function AppShell({
         <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-sidebar-border bg-sidebar lg:hidden">
         <div className="grid grid-cols-5">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
@@ -125,10 +145,11 @@ export function AppShell({
                 key={to}
                 to={to}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
-                  active ? "text-primary" : "text-muted-foreground",
+                  "relative flex flex-col items-center gap-1 py-2.5 font-condensed text-[11px] font-bold uppercase tracking-wider transition-colors",
+                  active ? "text-gold" : "text-sidebar-foreground/60",
                 )}
               >
+                {active ? <span className="absolute inset-x-4 top-0 h-0.5 bg-gold" /> : null}
                 <Icon className="size-5" />
                 {label}
               </Link>
