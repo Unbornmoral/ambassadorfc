@@ -14,6 +14,7 @@ import logoAsset from "@/assets/ambassador_logo.jpeg.asset.json";
 import { AppShell, TeamBadge } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { SectionTitle } from "@/components/ClubUI";
 import {
   formatDate,
   overallAttendanceRate,
@@ -244,18 +245,6 @@ function Stat({ n, l, c }: { n: number; l: string; c: string }) {
     <div>
       <p className={`font-display text-2xl ${c}`}>{n}</p>
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{l}</p>
-    </div>
-  );
-}
-
-export function SectionTitle({ kicker, title }: { kicker: string; title: string }) {
-  return (
-    <div className="mb-4 flex items-end gap-4">
-      <div>
-        <p className="font-condensed text-xs font-bold uppercase tracking-[0.3em] text-primary">{kicker}</p>
-        <h3 className="mt-1 font-display text-3xl text-foreground">{title}</h3>
-      </div>
-      <span className="mb-2 h-0.5 flex-1 bg-foreground/80" />
     </div>
   );
 }
