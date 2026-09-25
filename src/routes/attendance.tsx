@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
-import { CountPill, PositionBadge } from "@/components/StatusPill";
+import { PositionBadge } from "@/components/StatusPill";
+import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -47,7 +47,7 @@ const ACTIONS: Array<{ status: AttendanceStatus; letter: string; label: string }
 ];
 
 function toneFor(status: AttendanceStatus, active: boolean) {
-  if (!active) return "border-border bg-card text-muted-foreground hover:border-primary/40";
+  if (!active) return "border-border bg-card text-muted-foreground hover:border-foreground/60";
   if (status === "present") return "border-transparent bg-success text-success-foreground";
   if (status === "late") return "border-transparent bg-warning text-warning-foreground";
   return "border-transparent bg-destructive text-destructive-foreground";
@@ -65,7 +65,7 @@ function AttendancePage() {
     if (initial) setSessionId(initial);
   }, [initial]);
 
-  const session = data.sessions.find((s) => s.id === sessionId);
+  const session = data.sessions.find((s) => s.id === sessionId) ?? sorted[0];
   const squad = [...data.players]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
@@ -93,7 +93,7 @@ function AttendancePage() {
             <p className="font-condensed text-xs font-bold uppercase tracking-[0.3em] text-gold">
               Team sheet • Training session
             </p>
-            <Select value={sessionId} onValueChange={setSessionId}>
+            <Select value={session?.id ?? ""} onValueChange={setSessionId}>
               <SelectTrigger className="h-12 border-pitch-foreground/25 bg-pitch/60 font-condensed text-base font-bold uppercase tracking-wide text-pitch-foreground">
                 <SelectValue placeholder="Select a session" />
               </SelectTrigger>
@@ -150,10 +150,6 @@ function AttendancePage() {
 
         {session ? (
           <>
-            {/* keep CountPill import used for consistency on small screens */}
-            <div className="hidden">
-              <CountPill label="Present" value={sum.present} tone="present" />
-            </div>
 
             <div className="sticky top-[76px] z-10 flex gap-2 rounded-lg border-2 border-foreground bg-card p-2 sm:top-[84px]">
               <Button

@@ -37,19 +37,19 @@ export function SquadNumber({
 }) {
   const big = size === "lg";
   return (
-    <div className={cn("relative shrink-0", className)}>
+    <div className={cn("relative mr-3 shrink-0", className)}>
       <div
         className={cn(
           "flex items-center justify-center rounded-full bg-secondary font-condensed font-bold text-secondary-foreground ring-2 ring-card",
-          big ? "size-14 text-lg" : "size-11 text-sm",
+          big ? "size-14 pr-2 text-base" : "size-11 pr-2 text-xs",
         )}
       >
         {initials(name)}
       </div>
       <span
         className={cn(
-          "absolute -bottom-1 -right-1 flex items-center justify-center rounded-md bg-pitch font-display text-pitch-foreground ring-2 ring-card",
-          big ? "h-7 min-w-7 px-1 text-base" : "h-6 min-w-6 px-1 text-sm",
+          "absolute -bottom-1 -right-4 flex items-center justify-center rounded-md bg-pitch font-display text-pitch-foreground ring-2 ring-card",
+          big ? "h-6 min-w-6 px-1 text-sm" : "h-5 min-w-5 px-0.5 text-xs",
         )}
       >
         {number}
