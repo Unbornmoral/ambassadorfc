@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarPlus, ClipboardCheck, Clock, MapPin, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -130,6 +130,12 @@ function SessionsPage() {
     notes: "",
   });
   const [errors, setErrors] = useState<Partial<Record<"title" | "date" | "time" | "location", string>>>({});
+
+  // New-session form should always default to the coach's current home pitch,
+  // including after the store hydrates saved settings on reload.
+  useEffect(() => {
+    setForm((f) => ({ ...f, location: data.settings.defaultLocation }));
+  }, [data.settings.defaultLocation]);
 
   const upcoming = upcomingSessions(data);
   const past = pastSessions(data);

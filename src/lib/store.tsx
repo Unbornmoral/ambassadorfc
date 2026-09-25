@@ -36,7 +36,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setData(JSON.parse(raw) as AppData);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<AppData>;
+        // Merge over the seed so any missing fields still fall back to defaults.
+        setData({ ...buildSeedData(), ...parsed });
+      }
     } catch {
       /* ignore corrupt storage */
     }

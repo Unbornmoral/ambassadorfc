@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, RotateCcw, Save } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -50,13 +50,24 @@ function download(filename: string, content: string, type: string) {
 }
 
 function SettingsPage() {
-  const { data, updateSettings, resetDemoData } = useStore();
+  const { data, hydrated, updateSettings, resetDemoData } = useStore();
   const [form, setForm] = useState({
     teamName: data.settings.teamName,
     coachName: data.settings.coachName,
     coachPhone: data.settings.coachPhone,
     defaultLocation: data.settings.defaultLocation,
   });
+
+  // Keep the form in sync with the real saved settings once the store
+  // hydrates from localStorage, so a refresh never shows stale defaults.
+  useEffect(() => {
+    setForm({
+      teamName: data.settings.teamName,
+      coachName: data.settings.coachName,
+      coachPhone: data.settings.coachPhone,
+      defaultLocation: data.settings.defaultLocation,
+    });
+  }, [data.settings, hydrated]);
 
   function exportCsv() {
     const rows = [
