@@ -47,7 +47,7 @@ const ACTIONS: Array<{ status: AttendanceStatus; letter: string; label: string }
 ];
 
 function toneFor(status: AttendanceStatus, active: boolean) {
-  if (!active) return "border-border bg-card text-muted-foreground hover:border-primary/40";
+  if (!active) return "border-border bg-card text-muted-foreground hover:border-foreground/60";
   if (status === "present") return "border-transparent bg-success text-success-foreground";
   if (status === "late") return "border-transparent bg-warning text-warning-foreground";
   return "border-transparent bg-destructive text-destructive-foreground";
@@ -150,10 +150,6 @@ function AttendancePage() {
 
         {session ? (
           <>
-            {/* keep CountPill import used for consistency on small screens */}
-            <div className="hidden">
-              <CountPill label="Present" value={sum.present} tone="present" />
-            </div>
 
             <div className="sticky top-[76px] z-10 flex gap-2 rounded-lg border-2 border-foreground bg-card p-2 sm:top-[84px]">
               <Button
