@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
-import { CountPill, PositionBadge } from "@/components/StatusPill";
+import { PositionBadge } from "@/components/StatusPill";
+import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
