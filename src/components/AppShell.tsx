@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import logoAsset from "@/assets/ambassador_logo.jpeg.asset.json";
+import logoAsset from "@//ambassador_logo.jpeg";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
