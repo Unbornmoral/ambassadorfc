@@ -65,7 +65,7 @@ function AttendancePage() {
     if (initial) setSessionId(initial);
   }, [initial]);
 
-  const session = data.sessions.find((s) => s.id === sessionId);
+  const session = data.sessions.find((s) => s.id === sessionId) ?? (sessionId ? undefined : sorted[0]);
   const squad = [...data.players]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
@@ -93,7 +93,7 @@ function AttendancePage() {
             <p className="font-condensed text-xs font-bold uppercase tracking-[0.3em] text-gold">
               Team sheet • Training session
             </p>
-            <Select value={sessionId} onValueChange={setSessionId}>
+            <Select value={session?.id ?? ""} onValueChange={setSessionId}>
               <SelectTrigger className="h-12 border-pitch-foreground/25 bg-pitch/60 font-condensed text-base font-bold uppercase tracking-wide text-pitch-foreground">
                 <SelectValue placeholder="Select a session" />
               </SelectTrigger>
