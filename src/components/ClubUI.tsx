@@ -41,14 +41,14 @@ export function SquadNumber({
       <div
         className={cn(
           "flex items-center justify-center rounded-full bg-secondary font-condensed font-bold text-secondary-foreground ring-2 ring-card",
-          big ? "size-14 text-lg" : "size-11 text-sm",
+          big ? "size-14 pb-2 pr-3 text-base" : "size-11 pb-1.5 pr-2.5 text-xs",
         )}
       >
         {initials(name)}
       </div>
       <span
         className={cn(
-          "absolute -bottom-1 -right-1 flex items-center justify-center rounded-md bg-pitch font-display text-pitch-foreground ring-2 ring-card",
+          "absolute -bottom-2 -right-3 flex items-center justify-center rounded-md bg-pitch font-display text-pitch-foreground ring-2 ring-card",
           big ? "h-7 min-w-7 px-1 text-base" : "h-6 min-w-6 px-1 text-sm",
         )}
       >

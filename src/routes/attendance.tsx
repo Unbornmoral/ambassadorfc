@@ -65,7 +65,7 @@ function AttendancePage() {
     if (initial) setSessionId(initial);
   }, [initial]);
 
-  const session = data.sessions.find((s) => s.id === sessionId) ?? (sessionId ? undefined : sorted[0]);
+  const session = data.sessions.find((s) => s.id === sessionId) ?? sorted[0];
   const squad = [...data.players]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
