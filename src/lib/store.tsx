@@ -7,7 +7,7 @@ import type {
   TeamSettings,
   TrainingSession,
 } from "./types";
-import { uuid } from "./types";
+import { calculateOverall, DEFAULT_ATTRIBUTES, uuid } from "./types";
 import { buildSeedData } from "./seed";
 
 const STORAGE_KEY = "ambassador-fc-data-v1";
@@ -15,7 +15,7 @@ const STORAGE_KEY = "ambassador-fc-data-v1";
 interface StoreValue {
   data: AppData;
   hydrated: boolean;
-  addPlayer: (p: Omit<Player, "id" | "createdAt" | "active">) => void;
+  addPlayer: (p: Omit<Player, "id" | "createdAt" | "active" | "attributes" | "overall" | "form">) => void;
   updatePlayer: (id: string, patch: Partial<Player>) => void;
   removePlayer: (id: string) => void;
   addSession: (s: Omit<TrainingSession, "id" | "createdAt">) => void;
@@ -38,8 +38,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<AppData>;
+        const seed = buildSeedData();
+        const players = (parsed.players ?? seed.players).map((player) => {
+          const attributes = player.attributes ?? DEFAULT_ATTRIBUTES[player.position];
+          return {
+            ...player,
+            attributes,
+            overall: player.overall ?? calculateOverall(attributes, player.position),
+            form: player.form ?? "Okay",
+          };
+        });
         // Merge over the seed so any missing fields still fall back to defaults.
-        setData({ ...buildSeedData(), ...parsed });
+        setData({ ...seed, ...parsed, players });
       }
     } catch {
       /* ignore corrupt storage */
@@ -57,11 +67,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [data, hydrated]);
 
   const addPlayer = useCallback<StoreValue["addPlayer"]>((p) => {
+    const attributes = DEFAULT_ATTRIBUTES[p.position];
     setData((d) => ({
       ...d,
       players: [
         ...d.players,
-        { ...p, id: uuid(), active: true, createdAt: new Date().toISOString() },
+        {
+          ...p,
+          id: uuid(),
+          active: true,
+          attributes,
+          overall: calculateOverall(attributes, p.position),
+          form: "Okay",
+          createdAt: new Date().toISOString(),
+        },
       ],
     }));
   }, []);
