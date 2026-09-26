@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import logoAsset from "@//ambassador_logo.jpeg";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -20,7 +19,7 @@ const NAV = [
 export function TeamBadge({ className }: { className?: string }) {
   return (
     <img
-      src={logoAsset.url}
+      src="/ambassador_logo.jpeg"
       alt="Ambassador FC badge"
       className={cn(
         "size-10 shrink-0 rounded-lg border border-sidebar-border object-cover",

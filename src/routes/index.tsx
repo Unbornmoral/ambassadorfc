@@ -10,7 +10,6 @@ import {
   Users,
 } from "lucide-react";
 
-import logoAsset from "@/assets/ambassador_logo.jpeg.asset.json";
 import { AppShell, TeamBadge } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -106,7 +105,7 @@ function Dashboard() {
         >
           <div className="pitch-stripes absolute inset-0" />
           <img
-            src={logoAsset.url}
+            src="/ambassador_logo.jpeg"
             alt=""
             aria-hidden
             className="pointer-events-none absolute -right-16 top-1/2 hidden w-[420px] -translate-y-1/2 rounded-full opacity-15 mix-blend-luminosity md:block"

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LayoutGrid, List, MessageCircle, Phone, Plus, Search, Trash2, UserPen } from "lucide-react";
+import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Search, ShieldCheck, Trash2, UserPen } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -44,7 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { playerAttendanceRate, useStore } from "@/lib/store";
-import type { Player, Position } from "@/lib/types";
+import type { Player, PlayerAttributes, Position } from "@/lib/types";
 import { POSITIONS, POSITION_SHORT } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +91,106 @@ interface FormState {
 
 const EMPTY: FormState = { fullName: "", jerseyNumber: "", position: "", phoneNumber: "" };
 
+const ATTRIBUTE_LABELS: Array<[keyof PlayerAttributes, string]> = [
+  ["pac", "Pace"],
+  ["sho", "Shooting"],
+  ["pas", "Passing"],
+  ["dri", "Dribbling"],
+  ["def", "Defending"],
+  ["phy", "Physical"],
+];
+
+function OverallBadge({ player, className }: { player: Player; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex min-w-12 flex-col items-center rounded-md border border-gold/50 bg-pitch px-2 py-1 text-pitch-foreground shadow-sm",
+        className,
+      )}
+      aria-label={`${player.overall} overall rating`}
+    >
+      <strong className="font-display text-2xl leading-none">{player.overall}</strong>
+      <span className="font-condensed text-[10px] font-bold uppercase tracking-wider text-gold">OVR</span>
+    </span>
+  );
+}
+
+function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClose: () => void }) {
+  return (
+    <Dialog open={player !== null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[92vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto border-2 border-gold/60 bg-pitch p-0 text-pitch-foreground sm:rounded-lg">
+        {player ? (
+          <>
+            <DialogHeader className="sr-only">
+              <DialogTitle>{player.fullName} player card</DialogTitle>
+              <DialogDescription>
+                Overall rating, current form and six core football attributes.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="pitch-stripes relative overflow-hidden p-6 sm:p-8">
+              <img
+                src="/ambassador_logo.jpeg"
+                alt=""
+                aria-hidden
+                className="pointer-events-none absolute -right-14 top-10 w-64 rounded-full opacity-10"
+              />
+              <div className="relative flex items-start justify-between gap-4 border-b border-pitch-foreground/20 pb-5">
+                <div>
+                  <p className="font-condensed text-xs font-bold uppercase tracking-[0.25em] text-gold">
+                    Ambassador FC · First Team
+                  </p>
+                  <div className="mt-4 flex items-center gap-4">
+                    <SquadNumber number={player.jerseyNumber} name={player.fullName} size="lg" />
+                    <div>
+                      <p className="font-display text-3xl leading-none sm:text-4xl">{player.fullName}</p>
+                      <p className="mt-2 font-condensed text-sm font-bold uppercase tracking-wider text-pitch-foreground/70">
+                        {POSITION_SHORT[player.position]} · #{player.jerseyNumber}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="shrink-0 text-center">
+                  <p className="font-display text-6xl leading-none text-gold">{player.overall}</p>
+                  <p className="font-condensed text-xs font-bold uppercase tracking-[0.2em]">OVR</p>
+                </div>
+              </div>
+
+              <div className="relative mt-5 grid grid-cols-2 gap-x-7 gap-y-4">
+                {ATTRIBUTE_LABELS.map(([key, label]) => (
+                  <div key={key}>
+                    <div className="flex items-end justify-between gap-2">
+                      <span className="font-condensed text-xs font-bold uppercase tracking-wider text-pitch-foreground/65">
+                        {key}
+                      </span>
+                      <strong className="font-display text-2xl leading-none">{player.attributes[key]}</strong>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-pitch-foreground/15">
+                      <div
+                        className="h-full rounded-full bg-gold"
+                        style={{ width: `${player.attributes[key]}%` }}
+                      />
+                    </div>
+                    <span className="sr-only">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="relative mt-6 flex items-center justify-between border-t border-pitch-foreground/20 pt-4">
+                <span className="flex items-center gap-2 font-condensed text-xs font-bold uppercase tracking-wider text-pitch-foreground/65">
+                  <Activity className="size-4 text-gold" /> Current form
+                </span>
+                <span className="rounded-sm bg-gold px-3 py-1 font-condensed text-sm font-bold uppercase text-warning-foreground">
+                  {player.form}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function digits(phone: string) {
   return phone.replace(/[^\d]/g, "");
 }
@@ -99,6 +206,7 @@ function SquadPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<"fullName" | "jerseyNumber" | "position" | "phoneNumber", string>>>({});
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
+  const [profilePlayer, setProfilePlayer] = useState<Player | null>(null);
 
   const players = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -241,20 +349,26 @@ function SquadPage() {
                         <span className="pointer-events-none absolute -right-1 -top-4 font-display text-7xl text-primary/[0.07]">
                           {p.jerseyNumber}
                         </span>
-                        <div className="relative flex items-center gap-4">
-                          <SquadNumber number={p.jerseyNumber} name={p.fullName} size="lg" />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-condensed text-lg font-bold uppercase leading-tight text-foreground">
-                              {p.fullName}
-                            </p>
-                            <div className="mt-1 flex items-center gap-2">
-                              <PositionBadge position={p.position} />
-                              <span className="font-condensed text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {playerAttendanceRate(data, p.id)}% attendance
-                              </span>
+                        <Button
+                          variant="ghost"
+                          className="relative h-auto w-full justify-start gap-4 p-0 text-left hover:bg-transparent"
+                          onClick={() => setProfilePlayer(p)}
+                          aria-label={`View ${p.fullName}'s player card`}
+                        >
+                            <SquadNumber number={p.jerseyNumber} name={p.fullName} size="lg" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-condensed text-lg font-bold uppercase leading-tight text-foreground">
+                                {p.fullName}
+                              </p>
+                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                <PositionBadge position={p.position} />
+                                <span className="font-condensed text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                  {playerAttendanceRate(data, p.id)}% attendance
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                            <OverallBadge player={p} />
+                        </Button>
                         <div className="relative mt-4 flex gap-1 border-t border-border pt-3">
                           <Button asChild variant="ghost" size="sm" className="flex-1">
                             <a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call player">
@@ -290,7 +404,11 @@ function SquadPage() {
           {players.map((p) => (
             <Card key={p.id} className="shadow-none">
               <CardContent className="p-4">
-                <div className="flex items-start gap-3">
+                 <Button
+                   variant="ghost"
+                   className="h-auto w-full justify-start gap-3 p-0 text-left hover:bg-transparent"
+                   onClick={() => setProfilePlayer(p)}
+                 >
                   <SquadNumber number={p.jerseyNumber} name={p.fullName} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">{p.fullName}</p>
@@ -300,7 +418,8 @@ function SquadPage() {
                         {playerAttendanceRate(data, p.id)}% attendance
                       </span>
                     </div>
-                  </div>
+                   <OverallBadge player={p} />
+                 </Button>
                 </div>
                 <div className="mt-3 grid grid-cols-4 gap-2">
                   <Button asChild variant="outline" size="sm">
@@ -350,6 +469,7 @@ function SquadPage() {
                     </button>
                   </TableHead>
                   <TableHead>Position</TableHead>
+                   <TableHead>Rating</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>
                     <button className="font-semibold" onClick={() => setSort("rate")}>
@@ -363,10 +483,19 @@ function SquadPage() {
                 {players.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-display text-xl">{p.jerseyNumber}</TableCell>
-                    <TableCell className="font-medium">{p.fullName}</TableCell>
+                     <TableCell>
+                       <Button variant="link" className="h-auto p-0 font-medium text-foreground" onClick={() => setProfilePlayer(p)}>
+                         {p.fullName}
+                       </Button>
+                     </TableCell>
                     <TableCell>
                       <PositionBadge position={p.position} />
                     </TableCell>
+                     <TableCell>
+                       <span className="inline-flex items-center gap-1 font-display text-xl text-primary">
+                         <ShieldCheck className="size-4" /> {p.overall}
+                       </span>
+                     </TableCell>
                     <TableCell className="text-muted-foreground">{p.phoneNumber}</TableCell>
                     <TableCell>{playerAttendanceRate(data, p.id)}%</TableCell>
                     <TableCell className="text-right">
@@ -499,6 +628,7 @@ function SquadPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <PlayerProfileDialog player={profilePlayer} onClose={() => setProfilePlayer(null)} />
     </AppShell>
   );
 }
