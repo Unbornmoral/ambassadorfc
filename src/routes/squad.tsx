@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Search, ShieldCheck, Trash2, UserPen } from "lucide-react";
+import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Save, Search, ShieldCheck, SlidersHorizontal, Trash2, UserPen, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -51,8 +52,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { playerAttendanceRate, useStore } from "@/lib/store";
-import type { Player, PlayerAttributes, Position } from "@/lib/types";
-import { POSITIONS, POSITION_SHORT } from "@/lib/types";
+import type { Player, PlayerAttributes, PlayerForm, Position } from "@/lib/types";
+import { calculateOverall, POSITIONS, POSITION_SHORT } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/squad")({
@@ -117,9 +118,46 @@ function OverallBadge({ player, className }: { player: Player; className?: strin
   );
 }
 
+const FORMS: PlayerForm[] = ["Poor", "Okay", "Good", "Excellent"];
+
 function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClose: () => void }) {
+  const { updatePlayer } = useStore();
+  const [editingRatings, setEditingRatings] = useState(false);
+  const [draftAttributes, setDraftAttributes] = useState<PlayerAttributes | null>(null);
+  const [draftForm, setDraftForm] = useState<PlayerForm>("Okay");
+
+  function startEdit(p: Player) {
+    setDraftAttributes({ ...p.attributes });
+    setDraftForm(p.form);
+    setEditingRatings(true);
+  }
+
+  function cancelEdit() {
+    setEditingRatings(false);
+    setDraftAttributes(null);
+  }
+
+  function saveRatings(p: Player) {
+    if (!draftAttributes) return;
+    const overall = calculateOverall(draftAttributes, p.position);
+    updatePlayer(p.id, { attributes: draftAttributes, overall, form: draftForm });
+    toast.success(`${p.fullName}'s ratings saved — ${overall} OVR`);
+    cancelEdit();
+  }
+
+  const liveOverall =
+    player && draftAttributes ? calculateOverall(draftAttributes, player.position) : player?.overall;
+
   return (
-    <Dialog open={player !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={player !== null}
+      onOpenChange={(open) => {
+        if (!open) {
+          cancelEdit();
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="max-h-[92vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto border-2 border-gold/60 bg-pitch p-0 text-pitch-foreground sm:rounded-lg">
         {player ? (
           <>
