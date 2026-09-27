@@ -418,9 +418,9 @@ function SquadPage() {
                         {playerAttendanceRate(data, p.id)}% attendance
                       </span>
                     </div>
+                   </div>
                    <OverallBadge player={p} />
                  </Button>
-                </div>
                 <div className="mt-3 grid grid-cols-4 gap-2">
                   <Button asChild variant="outline" size="sm">
                     <a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call player">
