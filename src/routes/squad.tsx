@@ -129,30 +129,30 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
                 Overall rating, current form and six core football attributes.
               </DialogDescription>
             </DialogHeader>
-            <div className="pitch-stripes relative overflow-hidden p-6 sm:p-8">
+            <div className="pitch-stripes relative overflow-hidden p-5 sm:p-8">
               <img
                 src="/ambassador_logo.jpeg"
                 alt=""
                 aria-hidden
                 className="pointer-events-none absolute -right-14 top-10 w-64 rounded-full opacity-10"
               />
-              <div className="relative flex items-start justify-between gap-4 border-b border-pitch-foreground/20 pb-5">
-                <div>
+              <div className="relative flex items-start justify-between gap-3 border-b border-pitch-foreground/20 pb-5 sm:gap-4">
+                <div className="min-w-0 flex-1">
                   <p className="font-condensed text-xs font-bold uppercase tracking-[0.25em] text-gold">
                     Ambassador FC · First Team
                   </p>
-                  <div className="mt-4 flex items-center gap-4">
+                  <div className="mt-4 flex min-w-0 items-center gap-3 sm:gap-4">
                     <SquadNumber number={player.jerseyNumber} name={player.fullName} size="lg" />
-                    <div>
-                      <p className="font-display text-3xl leading-none sm:text-4xl">{player.fullName}</p>
+                    <div className="min-w-0">
+                      <p className="font-display text-2xl leading-tight sm:text-4xl sm:leading-none">{player.fullName}</p>
                       <p className="mt-2 font-condensed text-sm font-bold uppercase tracking-wider text-pitch-foreground/70">
                         {POSITION_SHORT[player.position]} · #{player.jerseyNumber}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="shrink-0 text-center">
-                  <p className="font-display text-6xl leading-none text-gold">{player.overall}</p>
+                <div className="mt-5 shrink-0 text-center sm:mt-0">
+                  <p className="font-display text-5xl leading-none text-gold sm:text-6xl">{player.overall}</p>
                   <p className="font-condensed text-xs font-bold uppercase tracking-[0.2em]">OVR</p>
                 </div>
               </div>
