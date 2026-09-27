@@ -51,6 +51,8 @@ export const Route = createFileRoute("/sessions")({
         property: "og:description",
         content: "Upcoming and past Ambassador FC training sessions in one timeline.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SessionsPage,
