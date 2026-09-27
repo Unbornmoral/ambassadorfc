@@ -35,6 +35,8 @@ export const Route = createFileRoute("/attendance")({
         property: "og:description",
         content: "Mark training attendance for the Ambassador FC squad in seconds.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AttendancePage,

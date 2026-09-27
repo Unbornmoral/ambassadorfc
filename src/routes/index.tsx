@@ -39,6 +39,8 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Manage the Ambassador FC squad and weekend training attendance.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dashboard,

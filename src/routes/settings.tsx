@@ -34,6 +34,8 @@ export const Route = createFileRoute("/settings")({
         property: "og:description",
         content: "Team profile, data export and demo reset for Ambassador FC.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SettingsPage,

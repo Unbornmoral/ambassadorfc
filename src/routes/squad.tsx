@@ -68,6 +68,8 @@ export const Route = createFileRoute("/squad")({
         property: "og:description",
         content: "Player roster, positions, contact details and attendance rates.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SquadPage,
