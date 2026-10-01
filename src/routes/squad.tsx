@@ -189,9 +189,21 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
                     </div>
                   </div>
                 </div>
-                <div className="mt-5 shrink-0 text-center sm:mt-0">
-                  <p className="font-display text-5xl leading-none text-gold sm:text-6xl">{player.overall}</p>
-                  <p className="font-condensed text-xs font-bold uppercase tracking-[0.2em]">OVR</p>
+                <div className="mt-5 flex shrink-0 flex-col items-center gap-2 sm:mt-0">
+                  <div className="text-center">
+                    <p className="font-display text-5xl leading-none text-gold sm:text-6xl">{liveOverall}</p>
+                    <p className="font-condensed text-xs font-bold uppercase tracking-[0.2em]">OVR</p>
+                  </div>
+                  {!editingRatings ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-gold/60 bg-transparent text-gold hover:bg-gold/10 hover:text-gold"
+                      onClick={() => startEdit(player)}
+                    >
+                      <SlidersHorizontal className="size-3.5" /> Edit ratings
+                    </Button>
+                  ) : null}
                 </div>
               </div>
 
