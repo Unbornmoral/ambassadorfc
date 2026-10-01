@@ -208,33 +208,101 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
               </div>
 
               <div className="relative mt-5 grid grid-cols-2 gap-x-7 gap-y-4">
-                {ATTRIBUTE_LABELS.map(([key, label]) => (
-                  <div key={key}>
-                    <div className="flex items-end justify-between gap-2">
-                      <span className="font-condensed text-xs font-bold uppercase tracking-wider text-pitch-foreground/65">
-                        {key}
-                      </span>
-                      <strong className="font-display text-2xl leading-none">{player.attributes[key]}</strong>
+                {ATTRIBUTE_LABELS.map(([key, label]) => {
+                  const value = editingRatings && draftAttributes ? draftAttributes[key] : player.attributes[key];
+                  return (
+                    <div key={key}>
+                      <div className="flex items-end justify-between gap-2">
+                        <span className="font-condensed text-xs font-bold uppercase tracking-wider text-pitch-foreground/65">
+                          {key}
+                        </span>
+                        {editingRatings && draftAttributes ? (
+                          <Input
+                            type="number"
+                            min={1}
+                            max={99}
+                            value={value}
+                            aria-label={label}
+                            onChange={(e) => {
+                              const n = Math.max(1, Math.min(99, Number(e.target.value) || 1));
+                              setDraftAttributes({ ...draftAttributes, [key]: n });
+                            }}
+                            className="h-8 w-16 border-gold/40 bg-pitch-foreground/10 text-center font-display text-lg text-pitch-foreground"
+                          />
+                        ) : (
+                          <strong className="font-display text-2xl leading-none">{value}</strong>
+                        )}
+                      </div>
+                      {editingRatings && draftAttributes ? (
+                        <Slider
+                          min={1}
+                          max={99}
+                          step={1}
+                          value={[value]}
+                          aria-label={`${label} slider`}
+                          onValueChange={([n]) =>
+                            setDraftAttributes({ ...draftAttributes, [key]: n ?? value })
+                          }
+                          className="mt-2"
+                        />
+                      ) : (
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-pitch-foreground/15">
+                          <div
+                            className="h-full rounded-full bg-gold"
+                            style={{ width: `${value}%` }}
+                          />
+                        </div>
+                      )}
+                      <span className="sr-only">{label}</span>
                     </div>
-                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-pitch-foreground/15">
-                      <div
-                        className="h-full rounded-full bg-gold"
-                        style={{ width: `${player.attributes[key]}%` }}
-                      />
-                    </div>
-                    <span className="sr-only">{label}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <div className="relative mt-6 flex items-center justify-between border-t border-pitch-foreground/20 pt-4">
+              <div className="relative mt-6 flex items-center justify-between gap-3 border-t border-pitch-foreground/20 pt-4">
                 <span className="flex items-center gap-2 font-condensed text-xs font-bold uppercase tracking-wider text-pitch-foreground/65">
                   <Activity className="size-4 text-gold" /> Current form
                 </span>
-                <span className="rounded-sm bg-gold px-3 py-1 font-condensed text-sm font-bold uppercase text-warning-foreground">
-                  {player.form}
-                </span>
+                {editingRatings ? (
+                  <Select value={draftForm} onValueChange={(v) => setDraftForm(v as PlayerForm)}>
+                    <SelectTrigger
+                      aria-label="Player form"
+                      className="h-8 w-32 border-gold/40 bg-pitch-foreground/10 font-condensed text-sm font-bold uppercase text-pitch-foreground"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FORMS.map((f) => (
+                        <SelectItem key={f} value={f}>
+                          {f}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="rounded-sm bg-gold px-3 py-1 font-condensed text-sm font-bold uppercase text-warning-foreground">
+                    {player.form}
+                  </span>
+                )}
               </div>
+
+              {editingRatings ? (
+                <div className="relative mt-5 flex gap-2">
+                  <Button
+                    className="flex-1 bg-gold font-condensed font-bold uppercase tracking-wider text-warning-foreground hover:bg-gold/90"
+                    onClick={() => saveRatings(player)}
+                  >
+                    <Save className="size-4" /> Save ratings
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-pitch-foreground/40 bg-transparent text-pitch-foreground hover:bg-pitch-foreground/10 hover:text-pitch-foreground"
+                    onClick={cancelEdit}
+                  >
+                    <X className="size-4" /> Cancel
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </>
         ) : null}
