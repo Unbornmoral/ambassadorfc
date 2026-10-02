@@ -13,6 +13,7 @@ export interface PlayerAttributes {
 
 export interface Player {
   id: string;
+  userId?: string;
   fullName: string;
   jerseyNumber: number;
   position: Position;
