@@ -3,6 +3,8 @@ import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Save, Search, S
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { createPlayers } from "@/services/players";
+
 import { AppShell } from "@/components/AppShell";
 import { PositionBadge } from "@/components/StatusPill";
 import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
@@ -399,9 +401,9 @@ function SquadPage() {
       subtitle={`${data.players.length} registered players`}
       action={
         <Button onClick={openAdd} size="sm">
-          <Plus className="size-4" /> Add player
-        </Button>
-      }
+        <Plus className="size-4" /> Add player
+      </Button>
+}
     >
       <div className="space-y-4">
         <div className="relative">
