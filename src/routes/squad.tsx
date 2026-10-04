@@ -3,6 +3,9 @@ import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Save, Search, S
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { useEffect } from "react";
+import { getPlayers } from "@/services/players";
+
 import { createPlayers } from "@/services/players";
 
 import { AppShell } from "@/components/AppShell";
@@ -318,6 +321,22 @@ function digits(phone: string) {
 }
 
 function SquadPage() {
+
+  const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
+  useEffect(() => {
+    async function loadPlayers() {
+      try {
+        const players = await getPlayers();
+        setSupabasePlayers(players ?? []);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadPlayers();
+  }, []);
+
+
   const { data, addPlayer, updatePlayer, removePlayer } = useStore();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Position | "All">("All");
@@ -332,7 +351,7 @@ function SquadPage() {
 
   const players = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = data.players.filter((p) => {
+    const list = supabasePlayers.filter((p) => {
       const matchQ =
         !q || p.fullName.toLowerCase().includes(q) || String(p.jerseyNumber).includes(q);
       const matchP = filter === "All" || p.position === filter;
@@ -343,7 +362,7 @@ function SquadPage() {
       if (sort === "rate") return playerAttendanceRate(data, b.id) - playerAttendanceRate(data, a.id);
       return a.jerseyNumber - b.jerseyNumber;
     });
-  }, [data, query, filter, sort]);
+  }, [supabasePlayers, query, filter, sort]);
 
   function openAdd() {
     setEditing(null);
@@ -400,10 +419,16 @@ function SquadPage() {
       title="Squad"
       subtitle={`${data.players.length} registered players`}
       action={
-        <Button onClick={openAdd} size="sm">
-        <Plus className="size-4" /> Add player
-      </Button>
-}
+        <Button
+          onClick={async () => {
+            const result = await createPlayers(data.players);
+            console.log("Migrated:", result);
+          }}
+          size="sm"
+        >
+          Migrate Players
+        </Button>
+        }
     >
       <div className="space-y-4">
         <div className="relative">

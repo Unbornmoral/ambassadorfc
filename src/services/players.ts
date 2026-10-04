@@ -28,3 +28,33 @@ export async function createPlayers(players: any[]) {
 
   return data;
 }
+
+export async function getPlayers() {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .order("jersey_number");
+
+  
+
+  if (error) throw error;
+
+  return (data ?? []).map((player) => ({
+  id: player.id,
+  fullName: player.full_name,
+  jerseyNumber: player.jersey_number,
+  position: player.position,
+  phoneNumber: player.phone_number,
+  active: player.active,
+  overall: player.overall,
+  form: player.form,
+  attributes: {
+    pac: player.pac,
+    sho: player.sho,
+    pas: player.pas,
+    dri: player.dri,
+    def: player.def,
+    phy: player.phy,
+  },
+}));
+}
