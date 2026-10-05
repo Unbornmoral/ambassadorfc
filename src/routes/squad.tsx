@@ -3,6 +3,7 @@ import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Save, Search, S
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { createPlayer } from "@/services/players";
 import { useEffect } from "react";
 import { getPlayers } from "@/services/players";
 
@@ -323,18 +324,15 @@ function digits(phone: string) {
 function SquadPage() {
 
   const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
-  useEffect(() => {
-    async function loadPlayers() {
-      try {
-        const players = await getPlayers();
-        setSupabasePlayers(players ?? []);
-      } catch (error) {
-        console.error(error);
-      }
-    }
 
-    loadPlayers();
-  }, []);
+async function loadPlayers() {
+  const players = await getPlayers();
+  setSupabasePlayers(players ?? []);
+}
+
+useEffect(() => {
+  loadPlayers();
+}, []);
 
 
   const { data, addPlayer, updatePlayer, removePlayer } = useStore();
@@ -383,7 +381,7 @@ function SquadPage() {
     setSheetOpen(true);
   }
 
-  function submit() {
+  async function submit() {
     const next: Partial<Record<"fullName" | "jerseyNumber" | "position" | "phoneNumber", string>> = {};
     if (form.fullName.trim().length < 3) next.fullName = "Enter the player's full name.";
     const jersey = Number(form.jerseyNumber);
@@ -408,27 +406,23 @@ function SquadPage() {
       updatePlayer(editing.id, payload);
       toast.success(`${payload.fullName} updated`);
     } else {
-      addPlayer(payload);
-      toast.success(`${payload.fullName} added to the squad`);
-    }
-    setSheetOpen(false);
-  }
+     await createPlayer(payload);
+     await loadPlayers();
+    toast.success(`${payload.fullName} added to the squad`);
+        }
+        setSheetOpen(false);
+      }
 
   return (
     <AppShell
       title="Squad"
-      subtitle={`${data.players.length} registered players`}
+      subtitle={`${supabasePlayers.length} registered players`}
       action={
-        <Button
-          onClick={async () => {
-            const result = await createPlayers(data.players);
-            console.log("Migrated:", result);
-          }}
-          size="sm"
-        >
-          Migrate Players
+        <Button onClick={openAdd} size="sm">
+          <Plus className="size-4" />
+          Add player
         </Button>
-        }
+}
     >
       <div className="space-y-4">
         <div className="relative">
