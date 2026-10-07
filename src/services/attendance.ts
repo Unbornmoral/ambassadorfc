@@ -20,6 +20,16 @@ export async function getSupabaseSessions() {
   return data;
 }
 
+export async function getAttendanceRecords() {
+  const { data, error } = await supabase
+    .from("attendance_records")
+    .select("*");
+
+  if (error) throw error;
+
+  return data ?? [];
+}
+
 export async function createAttendance(records: any[]) {
   const { data, error } = await supabase
     .from("attendance_records")
@@ -30,4 +40,50 @@ export async function createAttendance(records: any[]) {
 
   return data;
 }
-``
+
+export async function setAttendanceRecord(
+  sessionId: string,
+  playerId: string,
+  status: string
+) {
+  const { data: existing, error: findError } = await supabase
+    .from("attendance_records")
+    .select("*")
+    .eq("session_id", sessionId)
+    .eq("player_id", playerId)
+    .maybeSingle();
+
+  if (findError) throw findError;
+
+  if (existing) {
+    const { error } = await supabase
+      .from("attendance_records")
+      .update({
+        status,
+      })
+      .eq("id", existing.id);
+
+    if (error) throw error;
+
+    return;
+  }
+
+  const { error } = await supabase
+    .from("attendance_records")
+    .insert({
+      session_id: sessionId,
+      player_id: playerId,
+      status,
+    });
+
+  if (error) throw error;
+}
+
+export async function clearAttendanceRecords(sessionId: string) {
+  const { error } = await supabase
+    .from("attendance_records")
+    .delete()
+    .eq("session_id", sessionId);
+
+  if (error) throw error;
+}

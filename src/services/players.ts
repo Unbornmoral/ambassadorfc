@@ -91,3 +91,57 @@ export async function getPlayers() {
     },
   }));
 }
+
+export async function updatePlayerById(id: string, player: any) {
+
+  const { data, error } = await supabase
+    .from("players")
+    .update({
+      full_name: player.fullName,
+      jersey_number: player.jerseyNumber,
+      phone_number: player.phoneNumber,
+      position: player.position,
+    })
+    .eq("id", id)
+    .select();
+
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function deletePlayerById(id: string) {
+  const { error } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function updatePlayerRatings(
+  id: string,
+  attributes: any,
+  overall: number,
+  form: string
+) {
+  const { data, error } = await supabase
+    .from("players")
+    .update({
+      pac: attributes.pac,
+      sho: attributes.sho,
+      pas: attributes.pas,
+      dri: attributes.dri,
+      def: attributes.def,
+      phy: attributes.phy,
+      overall,
+      form,
+    })
+    .eq("id", id)
+    .select();
+
+  if (error) throw error;
+
+  return data;
+}

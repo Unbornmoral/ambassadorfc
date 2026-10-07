@@ -3,11 +3,16 @@ import { Activity, LayoutGrid, List, MessageCircle, Phone, Plus, Save, Search, S
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { createPlayer } from "@/services/players";
+import { updatePlayerRatings } from "@/services/players";
+
+import {
+  updatePlayerById,
+  deletePlayerById,
+} from "@/services/players";
+
 import { useEffect } from "react";
 import { getPlayers } from "@/services/players";
 
-import { createPlayers } from "@/services/players";
 
 import { AppShell } from "@/components/AppShell";
 import { PositionBadge } from "@/components/StatusPill";
@@ -127,7 +132,7 @@ function OverallBadge({ player, className }: { player: Player; className?: strin
 const FORMS: PlayerForm[] = ["Poor", "Okay", "Good", "Excellent"];
 
 function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClose: () => void }) {
-  const { updatePlayer } = useStore();
+
   const [editingRatings, setEditingRatings] = useState(false);
   const [draftAttributes, setDraftAttributes] = useState<PlayerAttributes | null>(null);
   const [draftForm, setDraftForm] = useState<PlayerForm>("Okay");
@@ -143,10 +148,17 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
     setDraftAttributes(null);
   }
 
-  function saveRatings(p: Player) {
+  async function saveRatings(p: Player) {
     if (!draftAttributes) return;
     const overall = calculateOverall(draftAttributes, p.position);
-    updatePlayer(p.id, { attributes: draftAttributes, overall, form: draftForm });
+    await updatePlayerRatings(
+      p.id,
+      draftAttributes,
+      overall,
+      draftForm
+    );
+
+
     toast.success(`${p.fullName}'s ratings saved — ${overall} OVR`);
     cancelEdit();
   }
@@ -403,13 +415,16 @@ useEffect(() => {
       phoneNumber: form.phoneNumber.trim(),
     };
     if (editing) {
-      updatePlayer(editing.id, payload);
-      toast.success(`${payload.fullName} updated`);
-    } else {
-     await createPlayer(payload);
-     await loadPlayers();
-    toast.success(`${payload.fullName} added to the squad`);
-        }
+
+  const result = await updatePlayerById(editing.id, payload);
+
+  
+
+  await loadPlayers();
+
+  toast.success(`${payload.fullName} updated`);
+}
+
         setSheetOpen(false);
       }
 
@@ -756,11 +771,15 @@ useEffect(() => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (deleteTarget) {
-                  removePlayer(deleteTarget.id);
+                  await deletePlayerById(deleteTarget.id);
+
+                  await loadPlayers();
+
                   toast.success(`${deleteTarget.fullName} removed`);
                 }
+
                 setDeleteTarget(null);
               }}
             >

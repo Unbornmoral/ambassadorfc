@@ -3,6 +3,12 @@ import { CalendarPlus, ClipboardCheck, Clock, MapPin, Trash2 } from "lucide-reac
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  getSessions,
+  createSession,
+  deleteSessionById,
+} from "@/services/sessions";
+
 import { AppShell } from "@/components/AppShell";
 import {
   AlertDialog,
@@ -121,6 +127,7 @@ function SessionCard({
 }
 
 function SessionsPage() {
+  const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
   const { data, addSession, removeSession } = useStore();
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -139,10 +146,24 @@ function SessionsPage() {
     setForm((f) => ({ ...f, location: data.settings.defaultLocation }));
   }, [data.settings.defaultLocation]);
 
-  const upcoming = upcomingSessions(data);
-  const past = pastSessions(data);
+  async function loadSessions() {
+    const sessions = await getSessions();
+    setSupabaseSessions(sessions ?? []);
+    console.log("SUPABASE SESSIONS:", sessions);
+    }
+    useEffect(() => {
+    loadSessions();
+    }, []);
+    const today = todayISO();
 
-  function submit() {
+    const upcoming = supabaseSessions.filter(
+      (s) => s.date >= today
+    );
+
+    const past = supabaseSessions.filter(
+      (s) => s.date < today
+    );
+  async function submit() {
     const next: Partial<Record<"title" | "date" | "time" | "location", string>> = {};
     if (form.title.trim().length < 3) next.title = "Give the session a title.";
     if (!form.date) next.date = "Pick a date.";
@@ -150,13 +171,15 @@ function SessionsPage() {
     if (!form.location.trim()) next.location = "Where is the session?";
     setErrors(next);
     if (Object.keys(next).length) return;
-    addSession({
-      title: form.title.trim(),
-      date: form.date,
-      time: form.time,
-      location: form.location.trim(),
-      ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
-    });
+    await createSession({
+  title: form.title.trim(),
+  date: form.date,
+  time: form.time,
+  location: form.location.trim(),
+  notes: form.notes.trim(),
+});
+
+await loadSessions();
     toast.success("Session scheduled");
     setOpen(false);
     setForm({
@@ -285,9 +308,10 @@ function SessionsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (deleteId) {
-                  removeSession(deleteId);
+                  await deleteSessionById(deleteId);
+                  await loadSessions();
                   toast.success("Session deleted");
                 }
                 setDeleteId(null);
