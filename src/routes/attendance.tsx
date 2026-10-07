@@ -3,6 +3,12 @@ import { CheckCheck, Clock, MapPin, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  getAttendanceRecords,
+  setAttendanceRecord,
+  clearAttendanceRecords,
+} from "@/services/attendance";
+
 import { AppShell } from "@/components/AppShell";
 import { PositionBadge } from "@/components/StatusPill";
 import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
@@ -57,24 +63,57 @@ function toneFor(status: AttendanceStatus, active: boolean) {
 
 function AttendancePage() {
   const { session: initial } = Route.useSearch();
+
   const { data, setAttendance, markAllPresent, clearAttendance } = useStore();
+
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+
+  async function loadAttendance() {
+    const records = await getAttendanceRecords();
+
+    setAttendanceRecords(records ?? []);
+
+    console.log("SUPABASE ATTENDANCE:", records);
+  }
+
+  useEffect(() => {
+    loadAttendance();
+  }, []);
+
   const sorted = [...data.sessions].sort((a, b) =>
     (b.date + b.time).localeCompare(a.date + a.time),
   );
-  const [sessionId, setSessionId] = useState(initial || sorted[0]?.id || "");
+
+  const [sessionId, setSessionId] = useState(
+    initial || sorted[0]?.id || ""
+  );
 
   useEffect(() => {
     if (initial) setSessionId(initial);
   }, [initial]);
 
-  const session = data.sessions.find((s) => s.id === sessionId) ?? sorted[0];
+  const session =
+    data.sessions.find((s) => s.id === sessionId) ??
+    sorted[0];
+
   const squad = [...data.players]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
+
   const sum = session
     ? sessionSummary(data, session.id)
-    : { present: 0, late: 0, absent: 0, marked: 0, unmarked: 0, total: 0 };
-  const pct = sum.total ? Math.round((sum.marked / sum.total) * 100) : 0;
+    : {
+        present: 0,
+        late: 0,
+        absent: 0,
+        marked: 0,
+        unmarked: 0,
+        total: 0,
+      };
+
+  const pct = sum.total
+    ? Math.round((sum.marked / sum.total) * 100)
+    : 0;
 
   const statusBar: Record<AttendanceStatus | "none", string> = {
     present: "bg-success",
@@ -82,6 +121,7 @@ function AttendancePage() {
     absent: "bg-destructive",
     none: "bg-border",
   };
+
 
   return (
     <AppShell title="Matchday roll call" subtitle="Tap to select your squad — saved automatically">
