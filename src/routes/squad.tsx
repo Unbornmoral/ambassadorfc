@@ -6,12 +6,14 @@ import { toast } from "sonner";
 import { updatePlayerRatings } from "@/services/players";
 
 import {
+  createPlayer,
+  getPlayers,
   updatePlayerById,
   deletePlayerById,
 } from "@/services/players";
 
+
 import { useEffect } from "react";
-import { getPlayers } from "@/services/players";
 
 
 import { AppShell } from "@/components/AppShell";
@@ -409,21 +411,32 @@ useEffect(() => {
     if (Object.keys(next).length) return;
 
     const payload = {
-      fullName: form.fullName.trim(),
-      jerseyNumber: jersey,
-      position: form.position as Position,
-      phoneNumber: form.phoneNumber.trim(),
-    };
-    if (editing) {
+  fullName: form.fullName.trim(),
+  jerseyNumber: jersey,
+  position: form.position as Position,
+  phoneNumber: form.phoneNumber.trim(),
+};
 
-  const result = await updatePlayerById(editing.id, payload);
-
-  
+if (editing) {
+  await updatePlayerById(editing.id, payload);
 
   await loadPlayers();
 
   toast.success(`${payload.fullName} updated`);
+} else {
+  await createPlayer(payload);
+
+  await loadPlayers();
+
+  toast.success(`${payload.fullName} added`);
 }
+
+setSheetOpen(false);
+
+setForm(EMPTY);
+
+setEditing(null);
+
 
         setSheetOpen(false);
       }

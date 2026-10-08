@@ -9,6 +9,11 @@ import {
   clearAttendanceRecords,
 } from "@/services/attendance";
 
+import { getSessions } from "@/services/sessions";
+
+import { getPlayers } from "@/services/players";
+
+
 import { AppShell } from "@/components/AppShell";
 import { PositionBadge } from "@/components/StatusPill";
 import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
@@ -64,23 +69,47 @@ function toneFor(status: AttendanceStatus, active: boolean) {
 function AttendancePage() {
   const { session: initial } = Route.useSearch();
 
+  const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
+
   const { data, setAttendance, markAllPresent, clearAttendance } = useStore();
 
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+
+  const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
+
+  async function loadPlayers() {
+  const players = await getPlayers();
+
+  setSupabasePlayers(players ?? []);
+
+  console.log("SUPABASE PLAYERS:", players);
+}
 
   async function loadAttendance() {
     const records = await getAttendanceRecords();
 
     setAttendanceRecords(records ?? []);
 
-    console.log("SUPABASE ATTENDANCE:", records);
+    console.log("LOCAL PLAYERS", data.players);
   }
+
+  async function loadSessions() {
+  const sessions = await getSessions();
+
+  setSupabaseSessions(sessions ?? []);
+
+  console.log("SUPABASE SESSIONS:", sessions);
+}
 
   useEffect(() => {
     loadAttendance();
+    loadPlayers();
+    loadSessions();
   }, []);
 
-  const sorted = [...data.sessions].sort((a, b) =>
+  
+
+  const sorted = [...supabaseSessions].sort((a, b) =>
     (b.date + b.time).localeCompare(a.date + a.time),
   );
 
@@ -93,10 +122,13 @@ function AttendancePage() {
   }, [initial]);
 
   const session =
-    data.sessions.find((s) => s.id === sessionId) ??
+    supabaseSessions.find((s) => s.id === sessionId) ??
     sorted[0];
+    
+    console.log("CURRENT SESSION ID", sessionId);
+    console.log("CURRENT SESSION", session);
 
-  const squad = [...data.players]
+  const squad = [...supabasePlayers]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
 
@@ -258,7 +290,23 @@ function AttendancePage() {
                                 key={a.status}
                                 aria-label={`${a.label} — ${p.fullName}`}
                                 aria-pressed={record?.status === a.status}
-                                onClick={() => setAttendance(session.id, p.id, a.status)}
+                               onClick={async () => {
+                                  console.log("SESSION ID", session.id);
+                                  console.log("PLAYER ID", p.id);
+                                  console.log("STATUS", a.status);
+
+                                  await setAttendanceRecord(
+                                    session.id,
+                                    p.id,
+                                    a.status
+                                  );
+
+                                  await loadAttendance();
+
+                                  toast.success(
+                                    `${p.fullName} marked ${a.label}`
+                                  );
+                                }}
                                 className={cn(
                                   "flex size-12 flex-col items-center justify-center rounded-md border-2 font-display text-lg transition-all active:scale-95 sm:size-14",
                                   toneFor(a.status, record?.status === a.status),
