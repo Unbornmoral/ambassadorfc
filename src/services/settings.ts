@@ -1,0 +1,49 @@
+import { supabase } from "@/lib/supabase";
+
+const TEAM_ID = "455bb402-3f15-425e-a84d-11cd2525395f";
+
+export async function getSettings() {
+  const { data, error } = await supabase
+    .from("team_settings")
+    .select("*")
+    .eq("team_id", TEAM_ID)
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function updateSettings(
+  defaultLocation: string
+) {
+  const { data: existing } = await supabase
+    .from("team_settings")
+    .select("*")
+    .eq("team_id", TEAM_ID)
+    .limit(1)
+    .single();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("team_settings")
+      .update({
+        default_location: defaultLocation,
+      })
+      .eq("id", existing.id);
+
+    if (error) throw error;
+
+    return;
+  }
+
+  const { error } = await supabase
+    .from("team_settings")
+    .insert({
+      team_id: TEAM_ID,
+      default_location: defaultLocation,
+    });
+
+  if (error) throw error;
+}

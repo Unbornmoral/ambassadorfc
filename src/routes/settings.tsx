@@ -3,6 +3,11 @@ import { Download, RotateCcw, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  getSettings,
+  updateSettings as updateSupabaseSettings,
+} from "@/services/settings";
+
 import { AppShell } from "@/components/AppShell";
 import {
   AlertDialog,
@@ -52,6 +57,7 @@ function download(filename: string, content: string, type: string) {
 }
 
 function SettingsPage() {
+  const [supabaseSettings, setSupabaseSettings] = useState<any>(null);
   const { data, hydrated, updateSettings, resetDemoData } = useStore();
   const [form, setForm] = useState({
     teamName: data.settings.teamName,
@@ -59,6 +65,24 @@ function SettingsPage() {
     coachPhone: data.settings.coachPhone,
     defaultLocation: data.settings.defaultLocation,
   });
+
+  async function loadSettings() {
+  const settings = await getSettings();
+
+  setSupabaseSettings(settings);
+
+  setForm((current) => ({
+    ...current,
+    defaultLocation: settings?.default_location ?? "",
+  }));
+
+  console.log("SUPABASE SETTINGS:", settings);
+}
+
+  useEffect(() => {
+  loadSettings();
+}, []);
+
 
   // Keep the form in sync with the real saved settings once the store
   // hydrates from localStorage, so a refresh never shows stale defaults.
@@ -129,8 +153,11 @@ function SettingsPage() {
               />
             </div>
             <Button
-              onClick={() => {
-                updateSettings(form);
+              onClick={async () => {
+                await updateSupabaseSettings(form.defaultLocation);
+
+                await loadSettings();
+
                 toast.success("Team profile saved");
               }}
             >

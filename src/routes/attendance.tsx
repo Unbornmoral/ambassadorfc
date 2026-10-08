@@ -71,7 +71,7 @@ function AttendancePage() {
 
   const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
 
-  const { data, setAttendance, markAllPresent, clearAttendance } = useStore();
+  const { data } = useStore();
 
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
 
@@ -81,8 +81,6 @@ function AttendancePage() {
   const players = await getPlayers();
 
   setSupabasePlayers(players ?? []);
-
-  console.log("SUPABASE PLAYERS:", players);
 }
 
   async function loadAttendance() {
@@ -90,15 +88,12 @@ function AttendancePage() {
 
     setAttendanceRecords(records ?? []);
 
-    console.log("LOCAL PLAYERS", data.players);
   }
 
   async function loadSessions() {
   const sessions = await getSessions();
 
   setSupabaseSessions(sessions ?? []);
-
-  console.log("SUPABASE SESSIONS:", sessions);
 }
 
   useEffect(() => {
@@ -124,24 +119,35 @@ function AttendancePage() {
   const session =
     supabaseSessions.find((s) => s.id === sessionId) ??
     sorted[0];
-    
-    console.log("CURRENT SESSION ID", sessionId);
-    console.log("CURRENT SESSION", session);
-
+  
   const squad = [...supabasePlayers]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
 
-  const sum = session
-    ? sessionSummary(data, session.id)
-    : {
-        present: 0,
-        late: 0,
-        absent: 0,
-        marked: 0,
-        unmarked: 0,
-        total: 0,
-      };
+  const sessionAttendance = attendanceRecords.filter(
+  (a) => a.session_id === session?.id
+);
+
+  const sum = {
+    present: sessionAttendance.filter(
+      (a) => a.status === "present"
+    ).length,
+
+    late: sessionAttendance.filter(
+      (a) => a.status === "late"
+    ).length,
+
+    absent: sessionAttendance.filter(
+      (a) => a.status === "absent"
+    ).length,
+
+    marked: sessionAttendance.length,
+
+    unmarked:
+      squad.length - sessionAttendance.length,
+
+    total: squad.length,
+  };
 
   const pct = sum.total
     ? Math.round((sum.marked / sum.total) * 100)
@@ -228,8 +234,17 @@ function AttendancePage() {
             <div className="sticky top-[76px] z-10 flex gap-2 rounded-lg border-2 border-foreground bg-card p-2 sm:top-[84px]">
               <Button
                 className="h-12 flex-1 font-condensed text-base font-bold uppercase tracking-wider"
-                onClick={() => {
-                  markAllPresent(session.id);
+                onClick={async () => {
+                  for (const player of squad) {
+                    await setAttendanceRecord(
+                      session.id,
+                      player.id,
+                      "present"
+                    );
+                  }
+
+                  await loadAttendance();
+
                   toast.success("Full squad marked present");
                 }}
               >
@@ -238,10 +253,14 @@ function AttendancePage() {
               <Button
                 variant="outline"
                 className="h-12 font-condensed text-base font-bold uppercase tracking-wider"
-                onClick={() => {
-                  clearAttendance(session.id);
+                onClick={async () => {
+                  await clearAttendanceRecords(session.id);
+
+                  await loadAttendance();
+
                   toast.success("Team sheet cleared");
                 }}
+
               >
                 <RotateCcw className="size-4" /> Reset
               </Button>
@@ -256,15 +275,20 @@ function AttendancePage() {
                     <h3 className="font-display text-2xl text-foreground">{POSITION_PLURAL[pos]}</h3>
                     <span className="ml-auto font-condensed text-sm font-bold uppercase tracking-wider text-muted-foreground">
                       {group.filter((p) =>
-                        data.attendance.some((a) => a.sessionId === session.id && a.playerId === p.id),
-                      ).length}
+                        attendanceRecords.some(
+                          (a) =>
+                            a.session_id === session.id &&
+                            a.player_id === p.id )
+                         ).length}
                       /{group.length} marked
                     </span>
                   </div>
                   <div className="grid gap-3 lg:grid-cols-2">
                     {group.map((p) => {
-                      const record = data.attendance.find(
-                        (a) => a.sessionId === session.id && a.playerId === p.id,
+                      const record = attendanceRecords.find(
+                        (a) =>
+                          a.session_id === session.id &&
+                          a.player_id === p.id,
                       );
                       return (
                         <div
@@ -274,7 +298,7 @@ function AttendancePage() {
                           <span
                             className={cn(
                               "absolute inset-y-0 left-0 w-1.5 transition-colors",
-                              statusBar[record?.status ?? "none"],
+                              statusBar[(record?.status as AttendanceStatus) ?? "none"],
                             )}
                           />
                           <SquadNumber number={p.jerseyNumber} name={p.fullName} />
@@ -291,10 +315,6 @@ function AttendancePage() {
                                 aria-label={`${a.label} — ${p.fullName}`}
                                 aria-pressed={record?.status === a.status}
                                onClick={async () => {
-                                  console.log("SESSION ID", session.id);
-                                  console.log("PLAYER ID", p.id);
-                                  console.log("STATUS", a.status);
-
                                   await setAttendanceRecord(
                                     session.id,
                                     p.id,

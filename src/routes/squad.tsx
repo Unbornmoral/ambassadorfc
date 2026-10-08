@@ -68,6 +68,7 @@ import { playerAttendanceRate, useStore } from "@/lib/store";
 import type { Player, PlayerAttributes, PlayerForm, Position } from "@/lib/types";
 import { calculateOverall, POSITIONS, POSITION_SHORT } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/squad")({
   head: () => ({
@@ -786,6 +787,11 @@ setEditing(null);
             <AlertDialogAction
               onClick={async () => {
                 if (deleteTarget) {
+                  await supabase
+                    .from("attendance_records")
+                    .delete()
+                    .eq("player_id", deleteTarget.id);
+
                   await deletePlayerById(deleteTarget.id);
 
                   await loadPlayers();

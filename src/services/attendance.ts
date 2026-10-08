@@ -46,12 +46,15 @@ export async function setAttendanceRecord(
   playerId: string,
   status: string
 ) {
-  const { data: existing, error: findError } = await supabase
-    .from("attendance_records")
-    .select("*")
-    .eq("session_id", sessionId)
-    .eq("player_id", playerId)
-    .maybeSingle();
+  const { data: existingRows, error: findError } = await supabase
+  .from("attendance_records")
+  .select("*")
+  .eq("session_id", sessionId)
+  .eq("player_id", playerId);
+
+  if (findError) throw findError;
+
+  const existing = existingRows?.[0];
 
   if (findError) throw findError;
 
