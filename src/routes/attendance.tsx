@@ -113,6 +113,12 @@ function AttendancePage() {
   );
 
   useEffect(() => {
+  if (!sessionId && sorted.length) {
+    setSessionId(sorted[0].id);
+  }
+}, [sorted, sessionId]);
+
+  useEffect(() => {
     if (initial) setSessionId(initial);
   }, [initial]);
 

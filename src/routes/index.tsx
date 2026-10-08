@@ -28,13 +28,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Ambassador FC — Coach Dashboard" },
+      { title: "Ambassador FC" },
       {
         name: "description",
         content:
           "Squad size, attendance rate and the next training session for Ambassador FC, at a glance.",
       },
-      { property: "og:title", content: "Ambassador FC — Coach Dashboard" },
+      { property: "og:title", content: "Ambassador FC" },
       {
         property: "og:description",
         content: "Manage the Ambassador FC squad and weekend training attendance.",
