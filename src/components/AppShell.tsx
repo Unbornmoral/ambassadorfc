@@ -1,12 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu } from "lucide-react";
+import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu, LogIn, LogOut, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
+import { useAdmin } from "@/lib/admin-context";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -78,8 +82,31 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { data } = useStore();
+  const { isAdmin, login, logout } = useAdmin();
   const [open, setOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  async function submitLogin() {
+    setSubmitting(true);
+    setLoginError("");
+    try {
+      const ok = await login(password);
+      if (ok) {
+        setPassword("");
+        setLoginOpen(false);
+      } else {
+        setLoginError("Incorrect admin password.");
+      }
+    } catch {
+      setLoginError("Unable to sign in right now. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -128,6 +155,22 @@ export function AppShell({
                 </p>
               ) : null}
             </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {isAdmin ? (
+                <>
+                  <span className="hidden items-center gap-1.5 rounded-sm border border-gold/50 bg-gold/15 px-2 py-1 font-condensed text-xs font-bold uppercase tracking-wider text-foreground sm:inline-flex">
+                    <ShieldCheck className="size-3.5" /> Admin mode
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => void logout()} aria-label="Log out of admin mode">
+                    <LogOut className="size-4" /><span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setLoginOpen(true)}>
+                  <LogIn className="size-4" /><span className="hidden sm:inline">Admin Login</span><span className="sm:hidden">Admin</span>
+                </Button>
+              )}
+            </div>
             {action}
           </div>
         </header>
@@ -156,6 +199,36 @@ export function AppShell({
           })}
         </div>
       </nav>
+
+      <Dialog open={loginOpen} onOpenChange={(next) => {
+        setLoginOpen(next);
+        if (!next) { setPassword(""); setLoginError(""); }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Admin login</DialogTitle>
+            <DialogDescription>Enter the shared admin password to manage the club.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="admin-password">Admin password</Label>
+            <Input
+              id="admin-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              onKeyDown={(event) => { if (event.key === "Enter") void submitLogin(); }}
+            />
+            {loginError ? <p role="alert" className="text-sm text-destructive">{loginError}</p> : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLoginOpen(false)}>Cancel</Button>
+            <Button onClick={() => void submitLogin()} disabled={submitting || !password}>
+              {submitting ? "Signing in…" : "Login"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
