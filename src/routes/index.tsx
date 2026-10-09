@@ -290,9 +290,18 @@ useEffect(() => {
             <Metric
               index="04"
               label="Player of commitment"
-              value={top ? top.p.fullName.split(" ").slice(-1)[0] ?? "—" : "—"}
-              icon={Trophy}
-              hint={top ? `${top.p.fullName} • ${top.r}%` : undefined}
+              value={
+                top && top.r > 0
+                  ? top.p.fullName.split(" ").slice(-1)[0]
+                  : "—"
+              }      
+                   icon={Trophy}
+                    hint={
+                  top && top.r > 0
+                  ?  `${top.p.fullName} • ${top.r}%`
+                    : "No attendance data yet"
+}
+              
             />
           </div>
         </section>
