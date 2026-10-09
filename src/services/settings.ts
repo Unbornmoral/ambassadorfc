@@ -15,9 +15,17 @@ export async function getSettings() {
   return data;
 }
 
-export async function updateSettings(
-  defaultLocation: string
-) {
+export async function updateSettings({
+  teamName,
+  coachName,
+  coachPhone,
+  defaultLocation,
+}: {
+  teamName: string;
+  coachName: string;
+  coachPhone: string;
+  defaultLocation: string;
+}) {
   const { data: existing } = await supabase
     .from("team_settings")
     .select("*")
@@ -30,6 +38,9 @@ export async function updateSettings(
       .from("team_settings")
       .update({
         default_location: defaultLocation,
+        team_name: teamName,
+        coach_name: coachName,
+        coach_phone: coachPhone,
       })
       .eq("id", existing.id);
 
@@ -43,6 +54,9 @@ export async function updateSettings(
     .insert({
       team_id: TEAM_ID,
       default_location: defaultLocation,
+      team_name: teamName,
+      coach_name: coachName,
+      coach_phone: coachPhone,
     });
 
   if (error) throw error;

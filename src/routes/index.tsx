@@ -10,6 +10,14 @@ import {
   Users,
 } from "lucide-react";
 
+import { useEffect, useState } from "react";
+
+
+import { getPlayers } from "@/services/players";
+import { getSessions } from "@/services/sessions";
+import { getAttendanceRecords } from "@/services/attendance";
+import { getSettings } from "@/services/settings";
+
 import { AppShell, TeamBadge } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -80,15 +88,107 @@ function Metric({
 
 function Dashboard() {
   const { data } = useStore();
-  const upcoming = upcomingSessions(data);
+  const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
+  const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [supabaseSettings, setSupabaseSettings] = useState<any>(null);
+
+  const today = todayISO();
+
+  const upcoming = [...supabaseSessions]
+    .filter((s) => s.date >= today)
+    .sort((a, b) =>
+      (a.date + a.time).localeCompare(
+        b.date + b.time
+      )
+    );
+
   const next = upcoming[0];
-  const past = pastSessions(data);
+
+  const past = [...supabaseSessions]
+    .filter((s) => s.date < today)
+    .sort((a, b) =>
+      (b.date + b.time).localeCompare(
+        a.date + a.time
+      )
+    );
   const recent = past.slice(0, 3);
-  const rate = overallAttendanceRate(data);
-  const squad = data.players.filter((p) => p.active);
+  const credit = attendanceRecords.reduce(
+  (sum, record) =>
+    sum +
+    (record.status === "present"
+      ? 1
+      : record.status === "late"
+      ? 0.5
+      : 0),
+          0
+        );
+
+        const rate = attendanceRecords.length
+          ? Math.round(
+              (credit / attendanceRecords.length) * 100
+            )
+          : 0;
+
+
+async function loadPlayers() {
+  const players = await getPlayers();
+  setSupabasePlayers(players ?? []);
+}
+
+async function loadSessions() {
+  const sessions = await getSessions();
+  setSupabaseSessions(sessions ?? []);
+}
+
+async function loadAttendance() {
+  const attendance = await getAttendanceRecords();
+  setAttendanceRecords(attendance ?? []);
+}
+
+async function loadSettings() {
+  const settings = await getSettings();
+  setSupabaseSettings(settings);
+}
+
+useEffect(() => {
+  loadPlayers();
+  loadSessions();
+  loadAttendance();
+  loadSettings();
+}, []);
+
+  const squad = supabasePlayers.filter((p) => p.active);
+
 
   const top = [...squad]
-    .map((p) => ({ p, r: playerAttendanceRate(data, p.id) }))
+    .map((p) => {
+      const records = attendanceRecords.filter(
+        (a) => a.player_id === p.id
+      );
+
+      const credit = records.reduce(
+        (sum, r) =>
+          sum +
+          (r.status === "present"
+            ? 1
+            : r.status === "late"
+            ? 0.5
+            : 0),
+        0
+      );
+
+      const rate = records.length
+        ? Math.round(
+            (credit / records.length) * 100
+          )
+        : 0;
+
+      return {
+        p,
+        r: rate,
+      };
+    })
     .sort((a, b) => b.r - a.r)[0];
 
   const todaySession = upcoming.find((s) => s.date === todayISO());
@@ -96,7 +196,7 @@ function Dashboard() {
 
   return (
     <AppShell
-      title={`Welcome, ${data.settings.coachName.replace(/^Coach\s+/, "")}`}
+      title={`Welcome, ${(supabaseSettings?.coach_name ?? "Coach").replace(/^Coach\s+/, "")}`}
       subtitle={`Matchday operations • ${squad.length} registered players`}
     >
       <div className="space-y-6">
@@ -121,7 +221,7 @@ function Dashboard() {
                 </span>
               </div>
               <h2 className="mt-6 font-display text-5xl sm:text-7xl xl:text-8xl">
-                {data.settings.teamName}
+                {supabaseSettings?.team_name ?? "Ambassador FC"}
               </h2>
               <p className="mt-4 font-condensed text-lg font-semibold uppercase tracking-[0.3em] text-pitch-foreground/80 sm:text-xl">
                 Discipline <span className="text-gold">•</span> Commitment{" "}
@@ -182,7 +282,7 @@ function Dashboard() {
             <Metric
               index="02"
               label="Sessions"
-              value={String(data.sessions.length)}
+              value={String(supabaseSessions.length)}
               icon={CalendarClock}
               hint={`${past.length} completed`}
             />
@@ -205,7 +305,32 @@ function Dashboard() {
           ) : (
             <div className="grid gap-4 lg:grid-cols-3">
               {recent.map((s) => {
-                const sum = sessionSummary(data, s.id);
+                const sessionAttendance =
+                  attendanceRecords.filter(
+                    (a) => a.session_id === s.id
+                  );
+
+                const sum = {
+                  present: sessionAttendance.filter(
+                    (a) => a.status === "present"
+                  ).length,
+
+                  late: sessionAttendance.filter(
+                    (a) => a.status === "late"
+                  ).length,
+
+                  absent: sessionAttendance.filter(
+                    (a) => a.status === "absent"
+                  ).length,
+
+                  marked: sessionAttendance.length,
+
+                  unmarked:
+                    squad.length -
+                    sessionAttendance.length,
+
+                  total: squad.length,
+                };
                 const pct = sum.total ? Math.round((sum.marked / sum.total) * 100) : 0;
                 return (
                   <Link

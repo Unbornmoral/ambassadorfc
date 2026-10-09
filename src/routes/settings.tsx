@@ -87,13 +87,15 @@ function SettingsPage() {
   // Keep the form in sync with the real saved settings once the store
   // hydrates from localStorage, so a refresh never shows stale defaults.
   useEffect(() => {
+    if (!supabaseSettings) return;
+
     setForm({
-      teamName: data.settings.teamName,
-      coachName: data.settings.coachName,
-      coachPhone: data.settings.coachPhone,
-      defaultLocation: data.settings.defaultLocation,
+      teamName: supabaseSettings.team_name ?? "",
+      coachName: supabaseSettings.coach_name ?? "",
+      coachPhone: supabaseSettings.coach_phone ?? "",
+      defaultLocation: supabaseSettings.default_location ?? "",
     });
-  }, [data.settings, hydrated]);
+  }, [supabaseSettings]);
 
   function exportCsv() {
     const rows = [
@@ -154,7 +156,12 @@ function SettingsPage() {
             </div>
             <Button
               onClick={async () => {
-                await updateSupabaseSettings(form.defaultLocation);
+                await updateSupabaseSettings({
+                  teamName: form.teamName,
+                  coachName: form.coachName,
+                  coachPhone: form.coachPhone,
+                  defaultLocation: form.defaultLocation,
+                });
 
                 await loadSettings();
 
