@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Player ratings are persisted on each Player and legacy browser data is normalized during store hydration, preserving existing roster records.
+- Temporary admin visibility uses a shared-password server function and encrypted session context; this is a UI convenience only because current club mutations remain browser-side and are not authorization-protected.
