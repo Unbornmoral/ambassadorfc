@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { useAdmin } from "@/lib/admin-context";
 import { PositionBadge } from "@/components/StatusPill";
 import { POSITION_ORDER, POSITION_PLURAL, SquadNumber } from "@/components/ClubUI";
 import {
@@ -122,6 +123,7 @@ const FORMS: PlayerForm[] = ["Poor", "Okay", "Good", "Excellent"];
 
 function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClose: () => void }) {
   const { updatePlayer } = useStore();
+  const { isAdmin } = useAdmin();
   const [editingRatings, setEditingRatings] = useState(false);
   const [draftAttributes, setDraftAttributes] = useState<PlayerAttributes | null>(null);
   const [draftForm, setDraftForm] = useState<PlayerForm>("Okay");
@@ -194,7 +196,7 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
                     <p className="font-display text-5xl leading-none text-gold sm:text-6xl">{liveOverall}</p>
                     <p className="font-condensed text-xs font-bold uppercase tracking-[0.2em]">OVR</p>
                   </div>
-                  {!editingRatings ? (
+                  {!editingRatings && isAdmin ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -317,6 +319,7 @@ function digits(phone: string) {
 
 function SquadPage() {
   const { data, addPlayer, updatePlayer, removePlayer } = useStore();
+  const { isAdmin } = useAdmin();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Position | "All">("All");
   const [sort, setSort] = useState<SortKey>("jersey");
@@ -398,9 +401,7 @@ function SquadPage() {
       title="Squad"
       subtitle={`${data.players.length} registered players`}
       action={
-        <Button onClick={openAdd} size="sm">
-          <Plus className="size-4" /> Add player
-        </Button>
+        isAdmin ? <Button onClick={openAdd} size="sm"><Plus className="size-4" /> Add player</Button> : undefined
       }
     >
       <div className="space-y-4">
@@ -489,7 +490,7 @@ function SquadPage() {
                             </div>
                             <OverallBadge player={p} />
                         </Button>
-                        <div className="relative mt-4 flex gap-1 border-t border-border pt-3">
+                        {isAdmin ? <div className="relative mt-4 flex gap-1 border-t border-border pt-3">
                           <Button asChild variant="ghost" size="sm" className="flex-1">
                             <a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call player">
                               <Phone className="size-4" />
@@ -506,7 +507,10 @@ function SquadPage() {
                           <Button variant="ghost" size="sm" className="flex-1" onClick={() => setDeleteTarget(p)} aria-label="Remove player">
                             <Trash2 className="size-4 text-destructive" />
                           </Button>
-                        </div>
+                        </div> : <div className="relative mt-4 flex gap-1 border-t border-border pt-3">
+                          <Button asChild variant="ghost" size="sm" className="flex-1"><a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call player"><Phone className="size-4" /></a></Button>
+                          <Button asChild variant="ghost" size="sm" className="flex-1"><a href={`https://wa.me/${digits(p.phoneNumber)}`} target="_blank" rel="noreferrer" aria-label="WhatsApp player"><MessageCircle className="size-4" /></a></Button>
+                        </div>}
                       </div>
                     ))}
                   </div>
@@ -541,7 +545,7 @@ function SquadPage() {
                    </div>
                    <OverallBadge player={p} />
                  </Button>
-                <div className="mt-3 grid grid-cols-4 gap-2">
+                <div className={cn("mt-3 grid gap-2", isAdmin ? "grid-cols-4" : "grid-cols-2")}>
                   <Button asChild variant="outline" size="sm">
                     <a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call player">
                       <Phone className="size-4" />
@@ -557,12 +561,12 @@ function SquadPage() {
                       <MessageCircle className="size-4" />
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
+                  {isAdmin ? <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
                     <UserPen className="size-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setDeleteTarget(p)}>
+                  </Button> : null}
+                  {isAdmin ? <Button variant="outline" size="sm" onClick={() => setDeleteTarget(p)}>
                     <Trash2 className="size-4 text-destructive" />
-                  </Button>
+                  </Button> : null}
                 </div>
               </CardContent>
             </Card>
@@ -596,7 +600,7 @@ function SquadPage() {
                       Attendance
                     </button>
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {isAdmin ? <TableHead className="text-right">Actions</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -618,7 +622,7 @@ function SquadPage() {
                      </TableCell>
                     <TableCell className="text-muted-foreground">{p.phoneNumber}</TableCell>
                     <TableCell>{playerAttendanceRate(data, p.id)}%</TableCell>
-                    <TableCell className="text-right">
+                    {isAdmin ? <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button asChild variant="ghost" size="icon">
                           <a href={`tel:${digits(p.phoneNumber)}`} aria-label="Call">
@@ -632,7 +636,7 @@ function SquadPage() {
                           <Trash2 className="size-4 text-destructive" />
                         </Button>
                       </div>
-                    </TableCell>
+                    </TableCell> : null}
                   </TableRow>
                 ))}
               </TableBody>
@@ -646,7 +650,7 @@ function SquadPage() {
         )}
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      {isAdmin ? <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md">
           <SheetHeader>
             <SheetTitle>{editing ? "Edit player" : "Add player"}</SheetTitle>
@@ -722,9 +726,9 @@ function SquadPage() {
             </Button>
           </SheetFooter>
         </SheetContent>
-      </Sheet>
+      </Sheet> : null}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+      {isAdmin ? <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove {deleteTarget?.fullName}?</AlertDialogTitle>
@@ -747,7 +751,7 @@ function SquadPage() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> : null}
       <PlayerProfileDialog player={profilePlayer} onClose={() => setProfilePlayer(null)} />
     </AppShell>
   );
