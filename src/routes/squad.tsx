@@ -403,7 +403,7 @@ useEffect(() => {
     if (!form.jerseyNumber || Number.isNaN(jersey) || jersey < 1 || jersey > 99)
       next.jerseyNumber = "Jersey number must be between 1 and 99.";
     else if (
-      data.players.some((p) => p.jerseyNumber === jersey && p.id !== editing?.id)
+      supabasePlayers.some((p) => p.jerseyNumber === jersey && p.id !== editing?.id)
     )
       next.jerseyNumber = "That jersey number is already taken.";
     if (!form.position) next.position = "Choose a position.";
