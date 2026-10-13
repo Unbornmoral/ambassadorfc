@@ -45,7 +45,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Ambassador FC" },
       {
         property: "og:description",
-        content: "Manage the Ambassador FC squad and weekend training attendance.",
+        content: "Manage the Ambassador FC squad and training attendance.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
