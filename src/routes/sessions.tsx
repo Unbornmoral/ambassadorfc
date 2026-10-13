@@ -9,6 +9,8 @@ import {
   deleteSessionById,
 } from "@/services/sessions";
 
+import { useAdmin } from "@/lib/admin";
+
 import { AppShell } from "@/components/AppShell";
 import {
   AlertDialog,
@@ -74,6 +76,7 @@ function SessionCard({
   onDelete: () => void;
 }) {
   const { data } = useStore();
+  const { isAdmin } = useAdmin();
   const sum = sessionSummary(data, session.id);
   return (
     <Card className="shadow-none">
@@ -117,9 +120,11 @@ function SessionCard({
               {completed ? "View report" : "Take attendance"}
             </Link>
           </Button>
-          <Button size="sm" variant="outline" onClick={onDelete} aria-label="Delete session">
-            <Trash2 className="size-4 text-destructive" />
-          </Button>
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={onDelete} aria-label="Delete session" disabled={!isAdmin}>
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -129,6 +134,7 @@ function SessionCard({
 function SessionsPage() {
   const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
   const { data, addSession, removeSession } = useStore();
+  const { isAdmin } = useAdmin();
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -164,6 +170,10 @@ function SessionsPage() {
       (s) => s.date < today
     );
   async function submit() {
+    if (!isAdmin) {
+      toast.error("Admin access required");
+      return;
+    }
     const next: Partial<Record<"title" | "date" | "time" | "location", string>> = {};
     if (form.title.trim().length < 3) next.title = "Give the session a title.";
     if (!form.date) next.date = "Pick a date.";
@@ -196,10 +206,14 @@ await loadSessions();
       title="Training sessions"
       subtitle={`${upcoming.length} upcoming • ${past.length} completed`}
       action={
-        <Button size="sm" onClick={() => setOpen(true)}>
-          <CalendarPlus className="size-4" /> New session
-        </Button>
+        isAdmin ? (
+          <Button size="sm" onClick={() => setOpen(true)}>
+            <CalendarPlus className="size-4" />
+            New session
+          </Button>
+        ) : null
       }
+
     >
       <Tabs defaultValue="upcoming">
         <TabsList className="w-full">
@@ -309,6 +323,10 @@ await loadSessions();
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
+                if (!isAdmin) {
+                  toast.error("Admin access required");
+                  return;
+                }
                 if (deleteId) {
                   await deleteSessionById(deleteId);
                   await loadSessions();

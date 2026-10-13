@@ -3,6 +3,18 @@ import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu } 
 import type { ReactNode } from "react";
 import { useState } from "react";
 
+import { useAdmin } from "@/lib/admin";
+import { toast } from "sonner";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { Input } from "@/components/ui/input";
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
@@ -78,6 +90,11 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { data } = useStore();
+  const { isAdmin, login, logout } = useAdmin();
+
+  const [showLogin, setShowLogin] = useState(false);
+  const [password, setPassword] = useState("");
+
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -128,7 +145,41 @@ export function AppShell({
                 </p>
               ) : null}
             </div>
-            {action}
+
+
+            <div className="flex items-center gap-2">
+
+              {isAdmin ? (
+
+                <>
+                  <span className="rounded bg-green-600 px-3 py-1 text-xs font-bold text-white">
+                    ADMIN
+                  </span>
+
+                  <Button
+                    variant="outline"
+                    onClick={logout}
+                  >
+                    Logout
+                  </Button>
+                </>
+
+              ) : (
+
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLogin(true)}
+                >
+                  Admin Login
+                </Button>
+
+              )}
+
+              {action}
+
+            </div>
+
+
           </div>
         </header>
 
@@ -156,6 +207,53 @@ export function AppShell({
           })}
         </div>
       </nav>
+
+          <Dialog
+  open={showLogin}
+  onOpenChange={setShowLogin}
+>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>
+        Admin Login
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-4">
+      <Input
+        type="password"
+        placeholder="Enter admin password"
+        value={password}
+        onChange={(e) =>
+          setPassword(e.target.value)
+        }
+      />
+
+      <Button
+        className="w-full"
+        onClick={async () => {
+          const success = await login(password);
+
+          if (success) {
+            toast.success(
+              "Admin mode enabled"
+            );
+
+            setPassword("");
+            setShowLogin(false);
+          } else {
+            toast.error(
+              "Invalid password"
+            );
+          }
+        }}
+      >
+        Login
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { updatePlayerRatings } from "@/services/players";
+import { useAdmin } from "@/lib/admin";
 
 import {
   createPlayer,
@@ -137,14 +138,20 @@ const FORMS: PlayerForm[] = ["Poor", "Okay", "Good", "Excellent"];
 function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClose: () => void }) {
 
   const [editingRatings, setEditingRatings] = useState(false);
+  const { isAdmin } = useAdmin();
   const [draftAttributes, setDraftAttributes] = useState<PlayerAttributes | null>(null);
   const [draftForm, setDraftForm] = useState<PlayerForm>("Okay");
 
   function startEdit(p: Player) {
-    setDraftAttributes({ ...p.attributes });
-    setDraftForm(p.form);
-    setEditingRatings(true);
+  if (!isAdmin) {
+    toast.error("Admin access required");
+    return;
   }
+
+  setDraftAttributes({ ...p.attributes });
+  setDraftForm(p.form);
+  setEditingRatings(true);
+}
 
   function cancelEdit() {
     setEditingRatings(false);
@@ -152,6 +159,11 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
   }
 
   async function saveRatings(p: Player) {
+    if (!isAdmin) {
+      toast.error("Admin access required");
+      return;
+    }
+
     if (!draftAttributes) return;
     const overall = calculateOverall(draftAttributes, p.position);
     await updatePlayerRatings(
@@ -216,6 +228,7 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
                     <p className="font-condensed text-xs font-bold uppercase tracking-[0.2em]">OVR</p>
                   </div>
                   {!editingRatings ? (
+                    isAdmin && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -224,7 +237,7 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
                     >
                       <SlidersHorizontal className="size-3.5" /> Edit ratings
                     </Button>
-                  ) : null}
+                  )) : null}
                 </div>
               </div>
 
@@ -351,6 +364,7 @@ useEffect(() => {
 
 
   const { data, addPlayer, updatePlayer, removePlayer } = useStore();
+  const { isAdmin } = useAdmin();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Position | "All">("All");
   const [sort, setSort] = useState<SortKey>("jersey");
@@ -378,6 +392,11 @@ useEffect(() => {
   }, [supabasePlayers, query, filter, sort]);
 
   function openAdd() {
+    if (!isAdmin) {
+  toast.error("Admin access required");
+  return;
+}
+
     setEditing(null);
     setForm(EMPTY);
     setErrors({});
@@ -385,6 +404,11 @@ useEffect(() => {
   }
 
   function openEdit(p: Player) {
+    if (!isAdmin) {
+  toast.error("Admin access required");
+  return;
+}
+
     setEditing(p);
     setForm({
       fullName: p.fullName,
@@ -397,6 +421,11 @@ useEffect(() => {
   }
 
   async function submit() {
+    if (!isAdmin) {
+      toast.error("Admin access required");
+      return;
+    }
+
     const next: Partial<Record<"fullName" | "jerseyNumber" | "position" | "phoneNumber", string>> = {};
     if (form.fullName.trim().length < 3) next.fullName = "Enter the player's full name.";
     const jersey = Number(form.jerseyNumber);
@@ -447,11 +476,13 @@ setEditing(null);
       title="Squad"
       subtitle={`${supabasePlayers.length} registered players`}
       action={
-        <Button onClick={openAdd} size="sm">
-          <Plus className="size-4" />
-          Add player
-        </Button>
-}
+        isAdmin && (
+          <Button onClick={openAdd} size="sm">
+            <Plus className="size-4" />
+            Add player
+          </Button>
+        )
+      }
     >
       <div className="space-y-4">
         <div className="relative">
@@ -786,6 +817,10 @@ setEditing(null);
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
+                if (!isAdmin) {
+                  toast.error("Admin access required");
+                  return;
+                }
                 if (deleteTarget) {
                   await supabase
                     .from("attendance_records")

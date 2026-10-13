@@ -8,6 +8,8 @@ import {
   updateSettings as updateSupabaseSettings,
 } from "@/services/settings";
 
+import { useAdmin } from "@/lib/admin";
+
 import { AppShell } from "@/components/AppShell";
 import {
   AlertDialog,
@@ -57,6 +59,7 @@ function download(filename: string, content: string, type: string) {
 }
 
 function SettingsPage() {
+  const { isAdmin } = useAdmin();
   const [supabaseSettings, setSupabaseSettings] = useState<any>(null);
   const { data, hydrated, updateSettings, resetDemoData } = useStore();
   const [form, setForm] = useState({
@@ -127,6 +130,7 @@ function SettingsPage() {
               <Input
                 id="teamName"
                 value={form.teamName}
+                disabled={!isAdmin}
                 onChange={(e) => setForm({ ...form, teamName: e.target.value })}
               />
             </div>
@@ -135,6 +139,7 @@ function SettingsPage() {
               <Input
                 id="coachName"
                 value={form.coachName}
+                disabled={!isAdmin}
                 onChange={(e) => setForm({ ...form, coachName: e.target.value })}
               />
             </div>
@@ -143,6 +148,7 @@ function SettingsPage() {
               <Input
                 id="coachPhone"
                 value={form.coachPhone}
+                disabled={!isAdmin}
                 onChange={(e) => setForm({ ...form, coachPhone: e.target.value })}
               />
             </div>
@@ -151,11 +157,19 @@ function SettingsPage() {
               <Input
                 id="pitch"
                 value={form.defaultLocation}
+                disabled={!isAdmin}
                 onChange={(e) => setForm({ ...form, defaultLocation: e.target.value })}
               />
             </div>
+
+            {isAdmin && (
             <Button
               onClick={async () => {
+                if (!isAdmin) {
+                  toast.error("Admin access required");
+                  return;
+                }
+
                 await updateSupabaseSettings({
                   teamName: form.teamName,
                   coachName: form.coachName,
@@ -170,6 +184,7 @@ function SettingsPage() {
             >
               <Save className="size-4" /> Save changes
             </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -208,11 +223,13 @@ function SettingsPage() {
             </CardHeader>
             <CardContent>
               <AlertDialog>
+                {isAdmin && (
                 <AlertDialogTrigger asChild>
                   <Button variant="outline">
                     <RotateCcw className="size-4" /> Reset to demo data
                   </Button>
                 </AlertDialogTrigger>
+                )}
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Reset all data?</AlertDialogTitle>
@@ -224,9 +241,13 @@ function SettingsPage() {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => {
+                        if (!isAdmin) {
+                          toast.error("Admin access required");
+                          return;
+                        }
                         resetDemoData();
                         toast.success("Demo data restored");
-                      }}
+  }}
                     >
                       Reset
                     </AlertDialogAction>

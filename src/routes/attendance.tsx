@@ -9,6 +9,8 @@ import {
   clearAttendanceRecords,
 } from "@/services/attendance";
 
+import { useAdmin } from "@/lib/admin";
+
 import { getSessions } from "@/services/sessions";
 
 import { getPlayers } from "@/services/players";
@@ -67,6 +69,7 @@ function toneFor(status: AttendanceStatus, active: boolean) {
 }
 
 function AttendancePage() {
+  const { isAdmin } = useAdmin();
   const { session: initial } = Route.useSearch();
 
   const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
@@ -241,6 +244,11 @@ function AttendancePage() {
               <Button
                 className="h-12 flex-1 font-condensed text-base font-bold uppercase tracking-wider"
                 onClick={async () => {
+                  if (!isAdmin) {
+                    toast.error("Admin access required");
+                    return;
+                  }
+
                   for (const player of squad) {
                     await setAttendanceRecord(
                       session.id,
@@ -260,6 +268,11 @@ function AttendancePage() {
                 variant="outline"
                 className="h-12 font-condensed text-base font-bold uppercase tracking-wider"
                 onClick={async () => {
+                  if (!isAdmin) {
+                    toast.error("Admin access required");
+                    return;
+                  }
+
                   await clearAttendanceRecords(session.id);
 
                   await loadAttendance();
@@ -317,10 +330,16 @@ function AttendancePage() {
                           <div className="flex shrink-0 gap-1.5">
                             {ACTIONS.map((a) => (
                               <button
+                                disabled={!isAdmin}
                                 key={a.status}
                                 aria-label={`${a.label} — ${p.fullName}`}
                                 aria-pressed={record?.status === a.status}
-                               onClick={async () => {
+                                onClick={async () => {
+                                  if (!isAdmin) {
+                                    toast.error("Admin access required");
+                                    return;
+                                  }
+
                                   await setAttendanceRecord(
                                     session.id,
                                     p.id,
@@ -333,6 +352,7 @@ function AttendancePage() {
                                     `${p.fullName} marked ${a.label}`
                                   );
                                 }}
+
                                 className={cn(
                                   "flex size-12 flex-col items-center justify-center rounded-md border-2 font-display text-lg transition-all active:scale-95 sm:size-14",
                                   toneFor(a.status, record?.status === a.status),
