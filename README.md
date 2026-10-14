@@ -1,6 +1,6 @@
 # Ambassador FC
 
-Build a modern football team management web app called "Ambassador FC", designed specifically for coaches to manage player rosters and track weekend training attendance from the pitch on mobile and desktop.
+This is a modern football team management web app called "Ambassador FC", designed specifically for coaches to manage player rosters and track weekend training attendance from the pitch on mobile and desktop.
 
 Stack & Design System:
 
@@ -124,17 +124,7 @@ Key Screens & Features:
 
    - "Export Squad & Attendance as JSON / CSV" utility.
 
-This project was built with [Lovable](https://lovable.dev).
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6c52afe3-6a98-4b88-b109-d31afa9c754b).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
