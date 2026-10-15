@@ -12,6 +12,7 @@ import {
 
 import { useEffect, useState } from "react";
 
+import { getAvailability } from "@/services/availability";
 
 import { getPlayers } from "@/services/players";
 import { getSessions } from "@/services/sessions";
@@ -91,6 +92,7 @@ function Dashboard() {
   const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
   const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [availabilityRecords, setAvailabilityRecords] = useState<any[]>([]);
   const [supabaseSettings, setSupabaseSettings] = useState<any>(null);
 
   const today = todayISO();
@@ -129,6 +131,20 @@ function Dashboard() {
               (credit / attendanceRecords.length) * 100
             )
           : 0;
+
+async function loadAvailability() {
+  if (!next?.id) return;
+
+  const records = await getAvailability(next.id);
+
+  setAvailabilityRecords(records ?? []);
+}
+
+useEffect(() => {
+  if (next?.id) {
+    loadAvailability();
+  }
+}, [next?.id]);
 
 
 async function loadPlayers() {
@@ -193,6 +209,27 @@ useEffect(() => {
 
   const todaySession = upcoming.find((s) => s.date === todayISO());
   const rollCall = todaySession ?? next;
+  const availabilitySummary = {
+  available: availabilityRecords.filter(
+    (a) => a.status === "available"
+  ).length,
+
+  maybe: availabilityRecords.filter(
+    (a) => a.status === "maybe"
+  ).length,
+
+  unavailable: availabilityRecords.filter(
+    (a) => a.status === "unavailable"
+  ).length,
+
+  injured: availabilityRecords.filter(
+    (a) => a.status === "injured"
+  ).length,
+
+  away: availabilityRecords.filter(
+    (a) => a.status === "away"
+  ).length,
+};
 
   return (
     <AppShell
@@ -259,17 +296,57 @@ useEffect(() => {
                 <p className="mt-3 text-sm opacity-80">No sessions scheduled yet.</p>
               )}
               {rollCall ? (
-                <Button
-                  asChild
-                  className="mt-5 w-full bg-gold font-condensed text-base font-bold uppercase tracking-wider text-foreground hover:bg-gold/90"
-                >
-                  <Link to="/attendance" search={{ session: rollCall.id }}>
-                    <ClipboardCheck className="size-4" />
-                    {todaySession ? "Session today — roll call" : "Prepare roll call"}
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
+                <>
+                  <Button
+                    asChild
+                    className="mt-5 w-full bg-gold font-condensed text-base font-bold uppercase tracking-wider text-foreground hover:bg-gold/90"
+                  >
+                    <Link to="/attendance" search={{ session: rollCall.id }}>
+                      <ClipboardCheck className="size-4" />
+                      {todaySession ? "Session today — roll call" : "Prepare roll call"}
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+
+                  <div className="mt-4 grid grid-cols-5 gap-2 text-center">
+                    <div className="rounded bg-green-600 p-2 text-white">
+                      <p className="text-xl font-bold">
+                        {availabilitySummary.available}
+                      </p>
+                      <p className="text-xs">Available</p>
+                    </div>
+
+                    <div className="rounded bg-yellow-500 p-2 text-white">
+                      <p className="text-xl font-bold">
+                        {availabilitySummary.maybe}
+                      </p>
+                      <p className="text-xs">Maybe</p>
+                    </div>
+
+                    <div className="rounded bg-red-600 p-2 text-white">
+                      <p className="text-xl font-bold">
+                        {availabilitySummary.unavailable}
+                      </p>
+                      <p className="text-xs">Unavailable</p>
+                    </div>
+
+                    <div className="rounded bg-gray-600 p-2 text-white">
+                      <p className="text-xl font-bold">
+                        {availabilitySummary.injured}
+                      </p>
+                      <p className="text-xs">Injured</p>
+                    </div>
+
+                    <div className="rounded bg-blue-600 p-2 text-white">
+                      <p className="text-xl font-bold">
+                        {availabilitySummary.away}
+                      </p>
+                      <p className="text-xs">Away</p>
+                    </div>
+                  </div>
+                </>
               ) : null}
+
             </div>
           </div>
         </section>
