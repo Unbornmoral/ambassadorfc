@@ -9,6 +9,11 @@ import {
   clearAttendanceRecords,
 } from "@/services/attendance";
 
+import {
+  getAvailability,
+  setAvailability,
+} from "@/services/availability";
+
 import { useAdmin } from "@/lib/admin";
 
 import { getSessions } from "@/services/sessions";
@@ -59,6 +64,15 @@ const ACTIONS: Array<{ status: AttendanceStatus; letter: string; label: string }
   { status: "present", letter: "P", label: "Present" },
   { status: "late", letter: "L", label: "Late" },
   { status: "absent", letter: "A", label: "Absent" },
+  
+];
+
+  const AVAILABILITY_OPTIONS = [
+  { value: "available", label: "Available", color: "bg-green-600" },
+  { value: "maybe", label: "Maybe", color: "bg-yellow-500" },
+  { value: "unavailable", label: "Unavailable", color: "bg-red-600" },
+  { value: "injured", label: "Injured", color: "bg-gray-600" },
+  { value: "away", label: "Away", color: "bg-blue-600" },
 ];
 
 function toneFor(status: AttendanceStatus, active: boolean) {
@@ -77,7 +91,21 @@ function AttendancePage() {
   const { data } = useStore();
 
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [availability, setAvailabilityData] = useState<any[]>([]);
+  async function loadAvailability(sessionId: string) {
+  if (!sessionId) return;
 
+  const records = await getAvailability(sessionId);
+
+  setAvailabilityData(records ?? []);
+}
+
+  function getAvailabilityStatus(playerId: string) {
+  return availability.find(
+    (a) => a.player_id === playerId
+  )?.status;
+}
+  
   const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
 
   async function loadPlayers() {
@@ -128,6 +156,12 @@ function AttendancePage() {
   const session =
     supabaseSessions.find((s) => s.id === sessionId) ??
     sorted[0];
+
+    useEffect(() => {
+  if (!session?.id) return;
+
+  loadAvailability(session.id);
+}, [session?.id]);
   
   const squad = [...supabasePlayers]
     .filter((p) => p.active)
@@ -326,6 +360,33 @@ function AttendancePage() {
                               {p.fullName}
                             </p>
                             <PositionBadge position={p.position} className="mt-1" />
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {AVAILABILITY_OPTIONS.map((option) => (
+                                  <button
+                                    key={option.value}
+                                    disabled={!isAdmin}
+                                    onClick={async () => {
+                                      await setAvailability(
+                                        p.id,
+                                        session.id,
+                                        option.value
+                                      );
+
+                                      await loadAvailability(session.id);
+                                    }}
+                                    className={cn(
+                                      "rounded px-2 py-1 text-xs font-bold text-white transition-opacity",
+                                      option.color,
+                                      getAvailabilityStatus(p.id) === option.value
+                                        ? "opacity-100 ring-2 ring-white"
+                                        : "opacity-60"
+                                    )}
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                              </div>
+
                           </div>
                           <div className="flex shrink-0 gap-1.5">
                             {ACTIONS.map((a) => (

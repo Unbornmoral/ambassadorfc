@@ -13,6 +13,7 @@ import {
   deletePlayerById,
 } from "@/services/players";
 
+import { getAttendanceRecords } from "@/services/attendance";
 
 import { useEffect } from "react";
 
@@ -65,7 +66,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { playerAttendanceRate, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import type { Player, PlayerAttributes, PlayerForm, Position } from "@/lib/types";
 import { calculateOverall, POSITIONS, POSITION_SHORT } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -141,6 +142,7 @@ function PlayerProfileDialog({ player, onClose }: { player: Player | null; onClo
   const { isAdmin } = useAdmin();
   const [draftAttributes, setDraftAttributes] = useState<PlayerAttributes | null>(null);
   const [draftForm, setDraftForm] = useState<PlayerForm>("Okay");
+
 
   function startEdit(p: Player) {
   if (!isAdmin) {
@@ -352,15 +354,45 @@ function digits(phone: string) {
 function SquadPage() {
 
   const [supabasePlayers, setSupabasePlayers] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
 
 async function loadPlayers() {
   const players = await getPlayers();
   setSupabasePlayers(players ?? []);
 }
 
+async function loadAttendance() {
+  const attendance = await getAttendanceRecords();
+  setAttendanceRecords(attendance ?? []);
+}
+
 useEffect(() => {
   loadPlayers();
+  loadAttendance();
 }, []);
+
+function getAttendanceRate(playerId: string) {
+  const records = attendanceRecords.filter(
+    (a) => a.player_id === playerId
+  );
+
+  if (!records.length) return 0;
+
+  const credit = records.reduce(
+    (sum, r) =>
+      sum +
+      (r.status === "present"
+        ? 1
+        : r.status === "late"
+        ? 0.5
+        : 0),
+    0
+  );
+
+  return Math.round(
+    (credit / records.length) * 100
+  );
+}
 
 
   const { data, addPlayer, updatePlayer, removePlayer } = useStore();
@@ -386,7 +418,7 @@ useEffect(() => {
     });
     return list.sort((a, b) => {
       if (sort === "name") return a.fullName.localeCompare(b.fullName);
-      if (sort === "rate") return playerAttendanceRate(data, b.id) - playerAttendanceRate(data, a.id);
+      if (sort === "rate") return getAttendanceRate(b.id) - getAttendanceRate(a.id);
       return a.jerseyNumber - b.jerseyNumber;
     });
   }, [supabasePlayers, query, filter, sort]);
@@ -440,7 +472,7 @@ useEffect(() => {
     setErrors(next);
     if (Object.keys(next).length) return;
 
-    const payload = {
+  const payload = {
   fullName: form.fullName.trim(),
   jerseyNumber: jersey,
   position: form.position as Position,
@@ -564,7 +596,7 @@ setEditing(null);
                               <div className="mt-1 flex flex-wrap items-center gap-2">
                                 <PositionBadge position={p.position} />
                                 <span className="font-condensed text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                  {playerAttendanceRate(data, p.id)}% attendance
+                                  {getAttendanceRate(p.id)}% attendance
                                 </span>
                               </div>
                             </div>
@@ -616,7 +648,7 @@ setEditing(null);
                     <div className="mt-1 flex items-center gap-2">
                       <PositionBadge position={p.position} />
                       <span className="text-xs text-muted-foreground">
-                        {playerAttendanceRate(data, p.id)}% attendance
+                        {getAttendanceRate(p.id)}% attendance
                       </span>
                     </div>
                    </div>
@@ -698,7 +730,7 @@ setEditing(null);
                        </span>
                      </TableCell>
                     <TableCell className="text-muted-foreground">{p.phoneNumber}</TableCell>
-                    <TableCell>{playerAttendanceRate(data, p.id)}%</TableCell>
+                    <TableCell>{getAttendanceRate(p.id)}%</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button asChild variant="ghost" size="icon">
