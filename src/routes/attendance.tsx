@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate, sessionSummary, useStore } from "@/lib/store";
+import { formatDate, useStore } from "@/lib/store";
 import type { AttendanceStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -66,8 +66,7 @@ const ACTIONS: Array<{ status: AttendanceStatus; letter: string; label: string }
   { status: "absent", letter: "A", label: "Absent" },
   
 ];
-
-  const AVAILABILITY_OPTIONS = [
+const AVAILABILITY_OPTIONS = [
   { value: "available", label: "Available", color: "bg-green-600" },
   { value: "maybe", label: "Maybe", color: "bg-yellow-500" },
   { value: "unavailable", label: "Unavailable", color: "bg-red-600" },
@@ -85,6 +84,8 @@ function toneFor(status: AttendanceStatus, active: boolean) {
 function AttendancePage() {
   const { isAdmin } = useAdmin();
   const { session: initial } = Route.useSearch();
+
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
 
   const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
 
@@ -166,10 +167,26 @@ function AttendancePage() {
   const squad = [...supabasePlayers]
     .filter((p) => p.active)
     .sort((a, b) => a.jerseyNumber - b.jerseyNumber);
+    const filteredSquad = squad.filter((player) => {
+    if (availabilityFilter === "all") return true;
+
+    return (
+      getAvailabilityStatus(player.id) ===
+      availabilityFilter
+    );
+  });
 
   const sessionAttendance = attendanceRecords.filter(
   (a) => a.session_id === session?.id
 );
+
+  const availabilitySummary = {
+    available: availability.filter((a) => a.status === "available").length,
+    maybe: availability.filter((a) => a.status === "maybe").length,
+    unavailable: availability.filter((a) => a.status === "unavailable").length,
+    injured: availability.filter((a) => a.status === "injured").length,
+    away: availability.filter((a) => a.status === "away").length,
+  }
 
   const sum = {
     present: sessionAttendance.filter(
@@ -263,6 +280,42 @@ function AttendancePage() {
                     <span className="text-gold">{pct}%</span>
                   </div>
                   <Progress value={pct} className="h-2 bg-pitch-foreground/15" />
+                    <div className="mt-4 grid grid-cols-5 gap-2 text-center">
+                      <div className="rounded bg-green-600 p-2 text-white">
+                        <p className="text-xl font-bold">
+                          {availabilitySummary.available}
+                        </p>
+                        <p className="text-xs">Available</p>
+                      </div>
+
+                      <div className="rounded bg-yellow-500 p-2 text-white">
+                        <p className="text-xl font-bold">
+                          {availabilitySummary.maybe}
+                        </p>
+                        <p className="text-xs">Maybe</p>
+                      </div>
+
+                      <div className="rounded bg-red-600 p-2 text-white">
+                        <p className="text-xl font-bold">
+                          {availabilitySummary.unavailable}
+                        </p>
+                        <p className="text-xs">Unavailable</p>
+                      </div>
+
+                      <div className="rounded bg-gray-600 p-2 text-white">
+                        <p className="text-xl font-bold">
+                          {availabilitySummary.injured}
+                        </p>
+                        <p className="text-xs">Injured</p>
+                      </div>
+
+                      <div className="rounded bg-blue-600 p-2 text-white">
+                        <p className="text-xl font-bold">
+                          {availabilitySummary.away}
+                        </p>
+                        <p className="text-xs">Away</p>
+                      </div>
+                    </div>                
                 </div>
               </>
             ) : (
@@ -319,8 +372,45 @@ function AttendancePage() {
               </Button>
             </div>
 
+            <div className="flex flex-wrap gap-2">
+            {[
+              "all",
+              "available",
+              "maybe",
+              "unavailable",
+              "injured",
+              "away",
+            ].map((status) => (
+              <Button
+                key={status}
+                variant={
+                  availabilityFilter === status
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() =>
+                  setAvailabilityFilter(status)
+                }
+              >
+                {status}
+              </Button>
+            ))}
+          </div>
+
             {POSITION_ORDER.map((pos) => {
-              const group = squad.filter((p) => p.position === pos);
+              const filteredSquad = squad.filter((player) => {
+                if (availabilityFilter === "all") return true;
+
+                return (
+                  getAvailabilityStatus(player.id) ===
+                  availabilityFilter
+                );
+              });
+
+              const group = filteredSquad.filter(
+                (p) => p.position === pos
+              );
               if (!group.length) return null;
               return (
                 <section key={pos}>
@@ -359,33 +449,36 @@ function AttendancePage() {
                             <p className="truncate font-condensed text-base font-bold uppercase leading-tight text-foreground">
                               {p.fullName}
                             </p>
-                            <PositionBadge position={p.position} className="mt-1" />
-                              <div className="mt-2 flex flex-wrap gap-1">
-                                {AVAILABILITY_OPTIONS.map((option) => (
-                                  <button
-                                    key={option.value}
-                                    disabled={!isAdmin}
-                                    onClick={async () => {
-                                      await setAvailability(
-                                        p.id,
-                                        session.id,
-                                        option.value
-                                      );
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {AVAILABILITY_OPTIONS.map((option) => (
+                                <button
+                                  key={option.value}
+                                  disabled={!isAdmin}
+                                  onClick={async () => {
+                                    await setAvailability(
+                                      p.id,
+                                      session.id,
+                                      option.value
+                                    );
 
-                                      await loadAvailability(session.id);
-                                    }}
-                                    className={cn(
-                                      "rounded px-2 py-1 text-xs font-bold text-white transition-opacity",
-                                      option.color,
-                                      getAvailabilityStatus(p.id) === option.value
-                                        ? "opacity-100 ring-2 ring-white"
-                                        : "opacity-60"
-                                    )}
-                                  >
-                                    {option.label}
-                                  </button>
-                                ))}
-                              </div>
+                                    await loadAvailability(session.id);
+
+                                    toast.success(
+                                      `${p.fullName}: ${option.label}`
+                                    );
+                                  }}
+                                  className={cn(
+                                    "rounded px-2 py-1 text-xs font-bold text-white transition-all",
+                                    option.color,
+                                    getAvailabilityStatus(p.id) === option.value
+                                      ? "ring-2 ring-white opacity-400"
+                                      : "opacity-25"
+                                  )}
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                            </div>
 
                           </div>
                           <div className="flex shrink-0 gap-1.5">
