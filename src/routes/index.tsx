@@ -313,7 +313,7 @@ useEffect(() => {
                       <p className="text-xl font-bold">
                         {availabilitySummary.available}
                       </p>
-                      <p className="text-xs">Available</p>
+                      <p className="text-xs">Avail</p>
                     </div>
 
                     <div className="rounded bg-yellow-500 p-2 text-white">
@@ -327,14 +327,14 @@ useEffect(() => {
                       <p className="text-xl font-bold">
                         {availabilitySummary.unavailable}
                       </p>
-                      <p className="text-xs">Unavailable</p>
+                      <p className="text-xs">Out</p>
                     </div>
 
                     <div className="rounded bg-gray-600 p-2 text-white">
                       <p className="text-xl font-bold">
                         {availabilitySummary.injured}
                       </p>
-                      <p className="text-xs">Injured</p>
+                      <p className="text-xs">Inj</p>
                     </div>
 
                     <div className="rounded bg-blue-600 p-2 text-white">

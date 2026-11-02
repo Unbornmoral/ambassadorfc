@@ -188,6 +188,10 @@ function AttendancePage() {
     away: availability.filter((a) => a.status === "away").length,
   }
 
+  const expectedTurnout =
+  availabilitySummary.available +
+  availabilitySummary.maybe;
+
   const sum = {
     present: sessionAttendance.filter(
       (a) => a.status === "present"
@@ -280,6 +284,26 @@ function AttendancePage() {
                     <span className="text-gold">{pct}%</span>
                   </div>
                   <Progress value={pct} className="h-2 bg-pitch-foreground/15" />
+
+                      <div className="mb-3 mt-4 rounded-lg border bg-card p-3 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          Expected turnout
+                        </p>
+
+                        <p className="text-3xl font-bold text-primary">
+                          {expectedTurnout}
+                        </p>
+
+                        <p className="text-xs text-muted-foreground">
+                          {squad.length
+                            ? Math.round(
+                                (expectedTurnout / squad.length) * 100
+                              )
+                            : 0}
+                          % expected attendance
+                        </p>
+                      </div>
+
                     <div className="mt-4 grid grid-cols-5 gap-2 text-center">
                       <div className="rounded bg-green-600 p-2 text-white">
                         <p className="text-xl font-bold">
@@ -471,8 +495,8 @@ function AttendancePage() {
                                     "rounded px-2 py-1 text-xs font-bold text-white transition-all",
                                     option.color,
                                     getAvailabilityStatus(p.id) === option.value
-                                      ? "ring-2 ring-white opacity-400"
-                                      : "opacity-25"
+                                      ? "ring-2 ring-white opacity-100"
+                                      : "opacity-50"
                                   )}
                                 >
                                   {option.label}
