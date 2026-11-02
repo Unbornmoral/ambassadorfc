@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu } from "lucide-react";
+import { ClipboardCheck, CalendarDays, LayoutDashboard, Settings, Users, Menu, Megaphone } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -26,6 +26,7 @@ const NAV = [
   { to: "/sessions", label: "Sessions", icon: CalendarDays },
   { to: "/attendance", label: "Roll Call", icon: ClipboardCheck },
   { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/announcements", label: "Announcements", icon: Megaphone }
 ] as const;
 
 export function TeamBadge({ className }: { className?: string }) {

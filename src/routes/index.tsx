@@ -10,6 +10,10 @@ import {
   Users,
 } from "lucide-react";
 
+import { Card, CardContent } from "@/components/ui/card";
+import { getAnnouncements } from "@/services/announcements";
+import { Megaphone } from "lucide-react";
+
 import { useEffect, useState } from "react";
 
 import { getAvailability } from "@/services/availability";
@@ -95,6 +99,8 @@ function Dashboard() {
   const [availabilityRecords, setAvailabilityRecords] = useState<any[]>([]);
   const [supabaseSettings, setSupabaseSettings] = useState<any>(null);
 
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+
   const today = todayISO();
 
   const upcoming = [...supabaseSessions]
@@ -172,7 +178,15 @@ useEffect(() => {
   loadSessions();
   loadAttendance();
   loadSettings();
+  loadAnnouncements();
+
 }, []);
+
+async function loadAnnouncements() {
+  const data = await getAnnouncements();
+
+  setAnnouncements(data ?? []);
+}
 
   const squad = supabasePlayers.filter((p) => p.active);
 
@@ -230,6 +244,10 @@ useEffect(() => {
     (a) => a.status === "away"
   ).length,
 };
+
+
+
+const latestAnnouncement = announcements[0];
 
   return (
     <AppShell
@@ -351,6 +369,43 @@ useEffect(() => {
           </div>
         </section>
 
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Megaphone className="size-4 text-primary" />
+              <h3 className="font-bold">
+                Latest Announcement
+              </h3>
+            </div>
+
+            {latestAnnouncement ? (
+              <>
+                <p className="mt-3 font-semibold">
+                  {latestAnnouncement.title}
+                </p>
+
+                <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+                  {latestAnnouncement.message}
+                </p>
+
+                <Button
+                  asChild
+                  variant="link"
+                  className="mt-2 px-0"
+                >
+                  <Link to="/announcements">
+                    View all announcements
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No announcements yet.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* CLUB OVERVIEW */}
         <section>
           <SectionTitle kicker="Club overview" title="The squad in numbers" />
@@ -448,6 +503,7 @@ useEffect(() => {
           )}
         </section>
       </div>
+      
     </AppShell>
   );
 }
